@@ -1,29 +1,22 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Card } from '@/design-system/components'
 import { useAssessmentStore } from '@/state/assessmentStore'
+import { STANDARD } from '@/standard/data/standard'
 import { signatureQuestions } from '@/features/review-finalise/SectionCompletionList'
 
-/** Lightweight tap-to-sign: stores the signer's typed name as the answer.
- * A full canvas signature pad is a reasonable future upgrade; this keeps the
- * two SIGNATURE questions (primary assessor, farm representative) real and
- * persisted rather than a purely decorative placeholder. */
-export function SignatureCapture() {
+/** Read-only preview of the two SIGNATURE questions. Signing itself happens
+ * on the actual question row in the workspace (a real canvas pad — see
+ * `workspace/controls/SignatureControl.tsx`), which stores a PNG data-URL
+ * string as the answer; this card just renders that image if present, so
+ * there's exactly one signing mechanism rather than two divergent ones. */
+export function SignatureCapture({ assessmentId }: { assessmentId: string }) {
   const answers = useAssessmentStore((s) => s.answers)
-  const setAnswer = useAssessmentStore((s) => s.setAnswer)
-  const [editingCode, setEditingCode] = useState<string | null>(null)
-  const [draftName, setDraftName] = useState('')
-
+  const navigate = useNavigate()
   const questions = signatureQuestions()
 
-  function startSigning(code: string) {
-    setEditingCode(code)
-    setDraftName(typeof answers[code] === 'string' ? (answers[code] as string) : '')
-  }
-
-  function commit() {
-    if (editingCode && draftName.trim()) setAnswer(editingCode, draftName.trim())
-    setEditingCode(null)
-  }
+  const finalisationSection = STANDARD.sections.find((s) =>
+    questions.some((q) => s.questionIds.includes(q.id)),
+  )
 
   return (
     <Card padding="md">
@@ -31,62 +24,43 @@ export function SignatureCapture() {
         Signatures
       </div>
       {questions.map((q) => {
-        const signed = typeof answers[q.code] === 'string' && (answers[q.code] as string).length > 0
+        const value = answers[q.code]
+        const isImage = typeof value === 'string' && value.startsWith('data:image')
+        const signed = isImage || (typeof value === 'string' && value.trim().length > 0)
+
         return (
           <div key={q.code} style={{ marginBottom: 12 }}>
             <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 4 }}>{q.label}</div>
-            {editingCode === q.code ? (
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  autoFocus
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && commit()}
-                  placeholder="Type full name to sign"
-                  style={{
-                    flex: 1,
-                    height: 34,
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    padding: '0 10px',
-                    fontFamily: 'var(--font-display)',
-                    fontStyle: 'italic',
-                  }}
-                />
-                <button
-                  onClick={commit}
-                  style={{
-                    border: 'none',
-                    borderRadius: 8,
-                    background: 'var(--ocean)',
-                    color: '#fff',
-                    padding: '0 14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Done
-                </button>
-              </div>
-            ) : (
-              <div
-                onClick={() => startSigning(q.code)}
-                style={{
-                  height: 76,
-                  border: signed ? '1px solid var(--border)' : '2px dashed var(--border-strong)',
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  fontFamily: signed ? 'var(--font-display)' : undefined,
-                  fontStyle: signed ? 'italic' : undefined,
-                  fontSize: signed ? 18 : 13,
-                  color: signed ? 'var(--text-strong)' : 'var(--text-muted)',
-                }}
-              >
-                {signed ? (answers[q.code] as string) : 'Tap to sign'}
-              </div>
-            )}
+            <div
+              style={{
+                height: 76,
+                border: signed ? '1px solid var(--border)' : '2px dashed var(--border-strong)',
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                cursor: signed ? 'default' : 'pointer',
+                background: '#fff',
+              }}
+              onClick={() => {
+                if (!signed && finalisationSection) {
+                  navigate(`/assessments/${assessmentId}/section/${finalisationSection.id}`)
+                }
+              }}
+            >
+              {isImage ? (
+                <img src={value} alt={`${q.label} signature`} style={{ height: '100%' }} />
+              ) : signed ? (
+                <span style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontSize: 18 }}>
+                  {value as string}
+                </span>
+              ) : (
+                <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+                  Not yet signed — tap to sign in the workspace
+                </span>
+              )}
+            </div>
           </div>
         )
       })}

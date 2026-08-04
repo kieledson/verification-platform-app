@@ -126,13 +126,19 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => {
     },
 
     openAssessment: async (assessmentId) => {
-      const answers = await answersRepo.loadAnswers(assessmentId)
+      const [answers, record] = await Promise.all([
+        answersRepo.loadAnswers(assessmentId),
+        assessmentsRepo.getAssessment(assessmentId),
+      ])
       const visibilityById = computeAllVisibility(toEngineAnswers(answers))
       set({
         activeAssessmentId: assessmentId,
         activeSectionId: STANDARD.sections[0]?.id ?? null,
         answers,
         visibility: toCodeVisibility(visibilityById),
+        // Reflects the persisted save time immediately on open, rather than
+        // showing "not yet" until the user makes a fresh edit this session.
+        lastSavedAt: record?.lastSavedAt ?? null,
         // Map sub-state belongs to whichever assessment is active; reset it
         // so a previous assessment's pin/GPS reading can't leak into this one.
         pin: null,

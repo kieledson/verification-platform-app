@@ -58,8 +58,19 @@ const SEED_SITES: SiteRecord[] = [
   },
 ]
 
-export async function seedIfEmpty(): Promise<void> {
-  const count = await db.sites.count()
-  if (count > 0) return
-  await db.sites.bulkAdd(SEED_SITES)
+let seedPromise: Promise<void> | null = null
+
+/** Guarded against concurrent invocation with an in-flight-promise
+ * singleton — React 18 StrictMode double-invokes effects in dev, and two
+ * concurrent `count() === 0` checks would otherwise both pass before either
+ * write lands, causing a duplicate-key `BulkError` on the second `bulkAdd`. */
+export function seedIfEmpty(): Promise<void> {
+  if (!seedPromise) {
+    seedPromise = (async () => {
+      const count = await db.sites.count()
+      if (count > 0) return
+      await db.sites.bulkAdd(SEED_SITES)
+    })()
+  }
+  return seedPromise
 }

@@ -35,7 +35,7 @@ export function ReviewPage() {
 
         <div>
           <EvidenceCard assessmentId={assessmentId} />
-          <SignatureCapture />
+          <SignatureCapture assessmentId={assessmentId} />
           <FinaliseCard assessmentId={assessmentId} allAnswered={complete} />
         </div>
       </div>
