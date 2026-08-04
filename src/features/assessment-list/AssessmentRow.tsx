@@ -12,22 +12,23 @@ const STATUS_ACCENT: Record<AssessmentRecord['status'], string> = {
   synced: 'var(--success, #4C9F38)',
 }
 
-const STATUS_LABEL: Record<AssessmentRecord['status'], string> = {
-  draft: 'In progress',
-  'ready-to-sync': 'Ready to sync',
-  'pending-upload': 'Ready to sync',
-  synced: 'Submitted',
-}
-
-function syncState(record: AssessmentRecord, online: boolean) {
+/** The completion column (progress bar) and the disposition column (this
+ * function) are deliberately separate axes: completion tracks how many
+ * questions are answered, disposition tracks what will happen to the record
+ * next. Collapsing them used to produce contradictory-looking text — a
+ * "Ready to sync" heading over an "On this tablet" line for the same row.
+ * Now there's exactly one place that names the record's disposition. */
+function disposition(record: AssessmentRecord, online: boolean) {
   if (record.status === 'synced') {
     return { label: 'Synced', icon: 'check-circle-2', color: 'var(--success)' }
   }
-  if (!online) {
-    return { label: 'On this tablet', icon: 'cloud-off', color: 'var(--text-muted)' }
-  }
   if (record.status === 'pending-upload') {
-    return { label: 'Uploading', icon: 'upload-cloud', color: 'var(--ocean)' }
+    return online
+      ? { label: 'Uploading', icon: 'upload-cloud', color: 'var(--ocean)' }
+      : { label: 'Waiting for wifi', icon: 'cloud-off', color: 'var(--text-muted)' }
+  }
+  if (record.status === 'ready-to-sync') {
+    return { label: 'Ready to finalise', icon: 'cloud-off', color: 'var(--text-muted)' }
   }
   return { label: 'On this tablet', icon: 'cloud-off', color: 'var(--text-muted)' }
 }
@@ -35,15 +36,17 @@ function syncState(record: AssessmentRecord, online: boolean) {
 export function AssessmentRow({ record, site }: { record: AssessmentRecord; site?: SiteRecord }) {
   const navigate = useNavigate()
   const online = useUiStore((s) => s.connectionMode !== 'offline')
-  const sync = syncState(record, online)
+  const sync = disposition(record, online)
+  const complete = record.progressPct >= 100
   const started = new Date(record.createdAt)
+  const startedLabel = `${started.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })}, ${started.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`
 
   return (
     <div
       onClick={() => navigate(`/assessments/${record.id}`)}
       style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 168px 140px 190px 132px',
+        gridTemplateColumns: '1fr 190px 132px',
         gap: 18,
         alignItems: 'center',
         background: '#fff',
@@ -71,29 +74,14 @@ export function AssessmentRow({ record, site }: { record: AssessmentRecord; site
             {site?.referenceCode ?? record.farmSiteId}
           </span>
         </div>
-        <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{site?.region}</div>
-      </div>
-
-      <div>
-        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-          Group
-        </div>
-        <div>{site?.groupName ?? record.groupId}</div>
-      </div>
-
-      <div>
-        <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-          Started
-        </div>
-        <div>
-          {started.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })},{' '}
-          {started.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+        <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
+          {[site?.region, site?.groupName ?? record.groupId, `Started ${startedLabel}`].filter(Boolean).join(' · ')}
         </div>
       </div>
 
       <div>
         <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-          {STATUS_LABEL[record.status]}
+          {complete ? 'Complete' : 'In progress'}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div style={{ flex: 1, height: 6, background: 'var(--gray-100)', borderRadius: 999 }}>

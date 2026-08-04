@@ -1,7 +1,9 @@
+import { useEffect, useRef, useState } from 'react'
 import { Logo, Icon, Avatar, IconButton } from '@/design-system/components'
 import { useUiStore } from '@/state/uiStore'
 import { usePinLockStore } from '@/state/pinLockStore'
 import type { ConnectionMode } from '@/sync/simulatedNetwork'
+import { relativeTime } from '@/lib/relativeTime'
 
 const CONNECTION_ICON: Record<ConnectionMode, string> = {
   offline: 'cloud-off',
@@ -21,6 +23,34 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
   const setConnectionMode = useUiStore((s) => s.setConnectionMode)
   const assessmentHeader = useUiStore((s) => s.assessmentHeader)
   const lock = usePinLockStore((s) => s.lock)
+
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Pulses briefly on an actual new save (lastSavedAt changing), not on
+  // every 30s tick of the display text — a ref (not state) tracks the
+  // previously-seen timestamp precisely so ticking alone never re-triggers it.
+  const [justSaved, setJustSaved] = useState(false)
+  const prevSavedAtRef = useRef<number | null | undefined>(undefined)
+  useEffect(() => {
+    const current = assessmentHeader?.lastSavedAt ?? null
+    const prev = prevSavedAtRef.current
+    prevSavedAtRef.current = current
+    if (prev !== undefined && prev !== null && current !== null && current !== prev) {
+      setJustSaved(true)
+      const timer = setTimeout(() => setJustSaved(false), 1200)
+      return () => clearTimeout(timer)
+    }
+  }, [assessmentHeader?.lastSavedAt])
+
+  const savedText = !assessmentHeader
+    ? null
+    : assessmentHeader.lastSavedAt
+      ? `Saved ${relativeTime(assessmentHeader.lastSavedAt, now)}`
+      : 'Not yet saved'
 
   return (
     <header
@@ -103,20 +133,21 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
             </span>
           </button>
 
-          {assessmentHeader.savedLabel && (
+          {savedText && (
             <span
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
                 fontSize: 11.5,
-                color: 'var(--text-muted)',
+                color: justSaved ? 'var(--success)' : 'var(--text-muted)',
                 whiteSpace: 'nowrap',
                 flex: 'none',
+                transition: 'color 0.4s ease',
               }}
             >
-              <Icon name="save" size={12} />
-              {assessmentHeader.savedLabel}
+              <Icon name={justSaved ? 'check' : 'save'} size={12} />
+              {savedText}
             </span>
           )}
         </div>
@@ -125,8 +156,20 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
         {/* Shows the current simulated connection (icon + label, grey when
             offline) and doubles as the demo control that changes it — see
-            the note on ConnectionMode above. */}
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            the note on ConnectionMode above. The dashed ring is the only
+            visual cue that this is a demo lever rather than a real network
+            indicator; kept faint so it doesn't compete with the pill itself. */}
+        <div
+          title="Demo control — simulates the device's network state"
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: 999,
+            outline: '1px dashed var(--border-strong)',
+            outlineOffset: 3,
+          }}
+        >
           <Icon
             name={CONNECTION_ICON[connectionMode]}
             size={13}

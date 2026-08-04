@@ -44,7 +44,7 @@ export function EvidenceCard({ assessmentId }: { assessmentId: string }) {
         <div
           onClick={() => setShowGallery(false)}
           style={{
-            position: 'fixed',
+            position: 'absolute',
             inset: 0,
             background: 'rgba(1,44,76,0.5)',
             display: 'flex',

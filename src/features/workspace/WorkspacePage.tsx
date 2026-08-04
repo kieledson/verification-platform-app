@@ -10,7 +10,6 @@ import { QuestionRow } from '@/features/workspace/QuestionRow'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
-import { relativeTime } from '@/lib/relativeTime'
 
 const QUESTION_BY_ID = new Map<number, Question>(STANDARD.questions.map((q) => [q.id, q]))
 
@@ -31,7 +30,6 @@ export function WorkspacePage() {
 
   const [assessment, setAssessment] = useState<AssessmentRecord | undefined>(undefined)
   const [site, setSite] = useState<SiteRecord | undefined>(undefined)
-  const [now, setNow] = useState(() => Date.now())
 
   // Load (or switch to) the assessment named by the route, guarding against
   // re-running the (async, DB-hitting) open on every render.
@@ -59,12 +57,6 @@ export function WorkspacePage() {
     if (!Number.isNaN(id) && id !== activeSectionId) setActiveSection(id)
   }, [sectionId, activeSectionId, setActiveSection])
 
-  // Refreshes the "Draft saved N min ago" footer text periodically.
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(timer)
-  }, [])
-
   // Renders the farm-details pill (plus live "draft saved" status) in the
   // shared TopBar itself, matching the design's single 56px header bar,
   // instead of a separate sub-header row or a footer buried in the rail.
@@ -74,11 +66,11 @@ export function WorkspacePage() {
       farmName: site?.farmName ?? 'Assessment',
       siteReference: site?.referenceCode ?? '',
       assessorType: assessment?.assessorType ?? '',
-      savedLabel: lastSavedAt ? `Saved ${relativeTime(lastSavedAt, now)}` : 'Not yet saved',
+      lastSavedAt,
       onBack: () => navigate('/assessments'),
     })
     return () => setAssessmentHeader(null)
-  }, [site, assessment, navigate, setAssessmentHeader, lastSavedAt, now])
+  }, [site, assessment, navigate, setAssessmentHeader, lastSavedAt])
 
   const engineAnswers = useMemo(() => toEngineAnswers(answers), [answers])
 
@@ -252,8 +244,8 @@ export function WorkspacePage() {
                       <Icon name="check-circle-2" size={13} style={{ color: 'var(--success)', flex: 'none' }} />
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 24 }}>
-                    <div style={{ flex: 1, height: 3, borderRadius: 999, background: 'var(--gray-100)' }}>
+                  <div style={{ paddingLeft: 24 }}>
+                    <div style={{ height: 3, borderRadius: 999, background: 'var(--gray-100)' }}>
                       <div
                         style={{
                           width: total === 0 ? '0%' : `${Math.round((answered / total) * 100)}%`,
@@ -263,9 +255,6 @@ export function WorkspacePage() {
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 'none', minWidth: 30, textAlign: 'right' }}>
-                      {answered}/{total}
-                    </span>
                   </div>
                 </button>
               )

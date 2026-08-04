@@ -5,9 +5,11 @@ export interface AssessmentHeaderInfo {
   farmName: string
   siteReference: string
   assessorType: string
-  /** Live "Draft saved N ago" text, shown next to the pill. Omitted (or
-   * null) on screens like Review where it isn't meaningful. */
-  savedLabel?: string | null
+  /** Raw save timestamp, not pre-formatted text — the TopBar owns the
+   * ticking "N ago" display and uses changes in this value (not the
+   * formatted string, which changes every tick regardless) to know when a
+   * real save just happened and briefly highlight it. */
+  lastSavedAt: number | null
   onBack: () => void
 }
 

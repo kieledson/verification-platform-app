@@ -37,7 +37,7 @@ export function NewAssessmentDialog({
   return (
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         inset: 0,
         background: 'rgba(1,44,76,0.35)',
         display: 'flex',

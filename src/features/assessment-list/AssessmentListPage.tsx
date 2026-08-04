@@ -69,9 +69,24 @@ export function AssessmentListPage() {
 
       <OfflineBanner />
 
-      {filtered.length === 0 && (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-          No assessments yet. Start one with "New assessment".
+      {filtered.length === 0 && assessments.length === 0 && (
+        <div style={{ padding: '64px 20px', textAlign: 'center' }}>
+          <Icon name="clipboard-list" size={32} style={{ color: 'var(--border-strong)' }} />
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 600, margin: '14px 0 6px' }}>
+            No assessments yet
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 20 }}>
+            Start your first farm assessment to see it appear here.
+          </div>
+          <Button variant="primary" iconLeft={<Icon name="plus" size={15} />} onClick={() => setShowNew(true)}>
+            New assessment
+          </Button>
+        </div>
+      )}
+
+      {filtered.length === 0 && assessments.length > 0 && (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
+          No assessments match "{query}".
         </div>
       )}
 

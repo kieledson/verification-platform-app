@@ -23,7 +23,7 @@ export function PinLockScreen({ onUnlocked }: { onUnlocked: () => void }) {
   return (
     <div
       style={{
-        position: 'fixed',
+        position: 'absolute',
         inset: 0,
         display: 'flex',
         alignItems: 'center',

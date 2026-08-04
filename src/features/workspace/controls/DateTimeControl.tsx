@@ -12,7 +12,14 @@ export function DateTimeControl({
       type="datetime-local"
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
-      style={{ width: 340, height: 34, borderRadius: 8, background: 'var(--gray-100)', border: '1px solid transparent' }}
+      style={{
+        width: 340,
+        height: 34,
+        borderRadius: 8,
+        fontSize: 13.5,
+        background: 'var(--gray-100)',
+        border: '1px solid var(--border)',
+      }}
     />
   )
 }

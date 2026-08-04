@@ -46,6 +46,7 @@ export function AppShell() {
     >
       <div
         style={{
+          position: 'relative',
           width: '100%',
           maxWidth: 1194,
           height: '100%',

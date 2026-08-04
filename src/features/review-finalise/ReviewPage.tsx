@@ -9,7 +9,6 @@ import { useUiStore } from '@/state/uiStore'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
-import { relativeTime } from '@/lib/relativeTime'
 
 export function ReviewPage() {
   const { assessmentId } = useParams<{ assessmentId: string }>()
@@ -23,12 +22,6 @@ export function ReviewPage() {
 
   const [assessment, setAssessment] = useState<AssessmentRecord | undefined>(undefined)
   const [site, setSite] = useState<SiteRecord | undefined>(undefined)
-  const [now, setNow] = useState(() => Date.now())
-
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(timer)
-  }, [])
 
   useEffect(() => {
     if (assessmentId && assessmentId !== activeAssessmentId) void openAssessment(assessmentId)
@@ -51,11 +44,11 @@ export function ReviewPage() {
       farmName: site?.farmName ?? 'Assessment',
       siteReference: site?.referenceCode ?? '',
       assessorType: assessment?.assessorType ?? '',
-      savedLabel: lastSavedAt ? `Saved ${relativeTime(lastSavedAt, now)}` : null,
+      lastSavedAt,
       onBack: () => navigate(`/assessments/${assessmentId}`),
     })
     return () => setAssessmentHeader(null)
-  }, [site, assessment, assessmentId, navigate, setAssessmentHeader, lastSavedAt, now])
+  }, [site, assessment, assessmentId, navigate, setAssessmentHeader, lastSavedAt])
 
   if (!assessmentId) return null
 
@@ -72,7 +65,7 @@ export function ReviewPage() {
 
         <div>
           <EvidenceCard assessmentId={assessmentId} />
-          <SignatureCapture assessmentId={assessmentId} />
+          <SignatureCapture />
           <FinaliseCard assessmentId={assessmentId} allAnswered={complete} />
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { Icon } from '@/design-system/components'
 import { localize } from '@/standard/localize'
 import type { AnswerOption } from '@/standard/schema/types'
 import { pillStyle, sortOptionsForDisplay } from './pillStyle'
@@ -32,6 +33,7 @@ export function MultiSelectControl({
             aria-pressed={selected}
             onClick={() => toggle(opt.value)}
           >
+            {selected && <Icon name="check" size={13} />}
             {localize(opt.label)}
           </button>
         )
