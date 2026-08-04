@@ -29,7 +29,7 @@ export function AssessmentListPage() {
   })
 
   return (
-    <div style={{ padding: '22px 26px 30px', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ padding: '22px 26px 30px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 18 }}>
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 600, margin: 0 }}>

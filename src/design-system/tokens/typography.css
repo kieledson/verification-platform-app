@@ -6,8 +6,8 @@
   /* families (see fonts.css for the substitute mapping) */
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;      /* Nocturno Display */
   --font-serif:   'Newsreader', Georgia, 'Times New Roman', serif;      /* Nocturno Text (body serif) */
-  --font-sans:    'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Peak */
-  --font-rounded: 'Baloo 2', 'Hanken Grotesk', sans-serif;              /* Peak Rounded */
+  --font-sans:    'Commissioner', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Peak */
+  --font-rounded: 'Baloo 2', 'Commissioner', sans-serif;                /* Peak Rounded */
 
   /* weights */
   --fw-regular: 400;  /* @kind font */

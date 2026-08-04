@@ -22,7 +22,7 @@ export function ReviewPage() {
   const { complete } = overallCompleteness(answers, visibility)
 
   return (
-    <div style={{ padding: '22px 26px 30px', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ padding: '22px 26px 30px' }}>
       <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 600, margin: '0 0 4px' }}>
         Before you finalise
       </h1>

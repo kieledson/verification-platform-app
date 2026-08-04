@@ -28,12 +28,29 @@ export function AppShell() {
   }, [refresh])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <TopBar eyebrow="FIELD ASSESSMENT" />
-      <div style={{ flex: 1, minHeight: 0, background: 'var(--surface-warm, #FBFAE8)' }}>
-        {ready ? <Outlet /> : null}
+    // Caps the whole app at the design's native 1194px tablet-landscape
+    // width (README: "1194×834 tablet frame, iPad landscape") and centers
+    // it, with a neutral backdrop outside that frame — otherwise a wide
+    // desktop browser stretches everything edge-to-edge, which reads as
+    // "zoomed in" compared to the tablet-scale mockups.
+    <div style={{ height: '100%', background: 'var(--gray-200, #D8D8D8)', display: 'flex', justifyContent: 'center' }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 1194,
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: '#fff',
+          boxShadow: '0 0 40px rgba(1,44,76,0.12)',
+        }}
+      >
+        <TopBar eyebrow="FIELD ASSESSMENT" />
+        <div style={{ flex: 1, minHeight: 0, background: 'var(--surface-warm, #FBFAE8)' }}>
+          {ready ? <Outlet /> : null}
+        </div>
+        {isLocked && <PinLockScreen onUnlocked={() => void refresh()} />}
       </div>
-      {isLocked && <PinLockScreen onUnlocked={() => void refresh()} />}
     </div>
   )
 }

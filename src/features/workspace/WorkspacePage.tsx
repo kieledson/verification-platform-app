@@ -236,9 +236,10 @@ export function WorkspacePage() {
                   style={{
                     flex: '1 1 0',
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    padding: '0 18px',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: 6,
+                    padding: '8px 18px',
                     border: 'none',
                     borderLeft: active ? '3px solid var(--ocean)' : '3px solid transparent',
                     background: active ? 'var(--color-primary-subtle)' : 'transparent',
@@ -246,50 +247,56 @@ export function WorkspacePage() {
                     textAlign: 'left',
                   }}
                 >
-                  <span
-                    style={{
-                      width: 18,
-                      height: 18,
-                      borderRadius: '50%',
-                      flex: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: active ? 'var(--ocean)' : 'var(--gray-100)',
-                      color: active ? '#fff' : 'var(--text-muted)',
-                    }}
-                  >
-                    {index + 1}
-                  </span>
-                  <span
-                    style={{
-                      flex: 1,
-                      fontSize: 12.5,
-                      fontWeight: active ? 700 : 500,
-                      color: active ? 'var(--ocean-deep)' : 'var(--text-body)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {section.name}
-                  </span>
-                  {complete && <Icon name="check-circle-2" size={14} style={{ color: 'var(--success)', flex: 'none' }} />}
-                  <div style={{ width: 40, height: 4, borderRadius: 999, background: 'var(--gray-100)', flex: 'none' }}>
-                    <div
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span
                       style={{
-                        width: total === 0 ? '0%' : `${Math.round((answered / total) * 100)}%`,
-                        height: '100%',
-                        borderRadius: 999,
-                        background: complete ? 'var(--success)' : 'var(--ocean-light)',
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        flex: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        background: active ? 'var(--ocean)' : 'var(--gray-100)',
+                        color: active ? '#fff' : 'var(--text-muted)',
                       }}
-                    />
+                    >
+                      {index + 1}
+                    </span>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontSize: 12.5,
+                        fontWeight: active ? 700 : 500,
+                        color: active ? 'var(--ocean-deep)' : 'var(--text-body)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {section.name}
+                    </span>
+                    {complete && (
+                      <Icon name="check-circle-2" size={14} style={{ color: 'var(--success)', flex: 'none' }} />
+                    )}
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 'none', minWidth: 30, textAlign: 'right' }}>
-                    {answered}/{total}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 28 }}>
+                    <div style={{ flex: 1, height: 4, borderRadius: 999, background: 'var(--gray-100)' }}>
+                      <div
+                        style={{
+                          width: total === 0 ? '0%' : `${Math.round((answered / total) * 100)}%`,
+                          height: '100%',
+                          borderRadius: 999,
+                          background: complete ? 'var(--success)' : 'var(--ocean-light)',
+                        }}
+                      />
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)', flex: 'none', minWidth: 30, textAlign: 'right' }}>
+                      {answered}/{total}
+                    </span>
+                  </div>
                 </button>
               )
             })}
