@@ -38,6 +38,7 @@ export function WorkspacePage() {
   const lastSavedAt = useAssessmentStore((s) => s.lastSavedAt)
   const onlyUnanswered = useUiStore((s) => s.onlyUnanswered)
   const toggleOnlyUnanswered = useUiStore((s) => s.toggleOnlyUnanswered)
+  const setAssessmentHeader = useUiStore((s) => s.setAssessmentHeader)
 
   const [assessment, setAssessment] = useState<AssessmentRecord | undefined>(undefined)
   const [site, setSite] = useState<SiteRecord | undefined>(undefined)
@@ -74,6 +75,20 @@ export function WorkspacePage() {
     const timer = setInterval(() => setNow(Date.now()), 30000)
     return () => clearInterval(timer)
   }, [])
+
+  // Renders the farm-details pill in the shared TopBar itself (matching the
+  // design's single 56px header bar) instead of a separate sub-header row.
+  useEffect(() => {
+    if (!site && !assessment) return
+    setAssessmentHeader({
+      farmName: site?.farmName ?? 'Assessment',
+      siteReference: site?.referenceCode ?? '',
+      standardLabel: `Shrimp: Farm Standard ${assessment?.standardVersion?.split('v')[1] ?? '2.4'}`,
+      assessorType: assessment?.assessorType ?? '',
+      onBack: () => navigate('/assessments'),
+    })
+    return () => setAssessmentHeader(null)
+  }, [site, assessment, navigate, setAssessmentHeader])
 
   const engineAnswers = useMemo(() => toEngineAnswers(answers), [answers])
 
@@ -135,41 +150,6 @@ export function WorkspacePage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          padding: '8px 20px',
-          background: '#fff',
-          borderBottom: '1px solid var(--border)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate('/assessments')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            border: '1px solid var(--border)',
-            borderRadius: 999,
-            background: '#fff',
-            padding: '6px 14px',
-            cursor: 'pointer',
-            fontSize: 12.5,
-          }}
-        >
-          <Icon name="chevron-left" size={14} />
-          <span style={{ fontWeight: 700, color: 'var(--ocean-deep)' }}>{site?.farmName ?? 'Assessment'}</span>
-          <span style={{ color: 'var(--text-muted)' }}>
-            {site?.referenceCode ? `${site.referenceCode} · ` : ''}
-            Shrimp: Farm Standard {assessment?.standardVersion?.split('v')[1] ?? '2.4'} · {assessment?.assessorType ?? ''}{' '}
-            assessment
-          </span>
-        </button>
-      </div>
-
       <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
         {/* Left rail */}
         <div
@@ -269,7 +249,7 @@ export function WorkspacePage() {
                       style={{
                         flex: 1,
                         fontSize: 12.5,
-                        fontWeight: active ? 700 : 500,
+                        fontWeight: 700,
                         color: active ? 'var(--ocean-deep)' : 'var(--text-body)',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',

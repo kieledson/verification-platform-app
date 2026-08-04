@@ -29,7 +29,7 @@ export function pillStyle(selected: boolean): React.CSSProperties {
     padding: '0 14px',
     borderRadius: 8,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 500,
     border: selected ? '1px solid var(--ocean)' : '1px solid var(--border)',
     background: selected ? 'var(--ocean)' : '#fff',
     color: selected ? '#fff' : 'var(--text-body)',

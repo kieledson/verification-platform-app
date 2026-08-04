@@ -1,4 +1,4 @@
-import { Logo, Icon, Avatar, Button } from '@/design-system/components'
+import { Logo, Icon, Avatar, IconButton } from '@/design-system/components'
 import { useUiStore } from '@/state/uiStore'
 import { usePinLockStore } from '@/state/pinLockStore'
 import type { ConnectionMode } from '@/sync/simulatedNetwork'
@@ -23,6 +23,7 @@ const CONNECTION_ICON: Record<ConnectionMode, string> = {
 export function TopBar({ eyebrow }: { eyebrow: string }) {
   const connectionMode = useUiStore((s) => s.connectionMode)
   const setConnectionMode = useUiStore((s) => s.setConnectionMode)
+  const assessmentHeader = useUiStore((s) => s.assessmentHeader)
   const lock = usePinLockStore((s) => s.lock)
 
   return (
@@ -33,31 +34,71 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
         alignItems: 'center',
         justifyContent: 'space-between',
         padding: '0 20px',
+        gap: 16,
         background: 'var(--white, #fff)',
         borderBottom: '1px solid var(--border)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Logo variant="mark-color" height={30} />
-        <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
-            Verification Platform
-          </div>
-          <div
-            style={{
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              color: 'var(--text-muted)',
-            }}
-          >
-            {eyebrow}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+          <Logo variant="mark-color" height={30} />
+          <div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}>
+              Verification Platform
+            </div>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                color: 'var(--text-muted)',
+              }}
+            >
+              {eyebrow}
+            </div>
           </div>
         </div>
+
+        {assessmentHeader && (
+          <button
+            type="button"
+            onClick={assessmentHeader.onBack}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              border: '1px solid var(--ocean-light)',
+              background: 'var(--color-primary-subtle)',
+              borderRadius: 999,
+              padding: '6px 14px',
+              cursor: 'pointer',
+              fontSize: 12.5,
+              minWidth: 0,
+              overflow: 'hidden',
+            }}
+          >
+            <Icon name="chevron-left" size={14} style={{ color: 'var(--ocean-deep)', flex: 'none' }} />
+            <span
+              style={{
+                fontWeight: 700,
+                color: 'var(--ocean-deep)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {assessmentHeader.farmName}
+            </span>
+            <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+              {assessmentHeader.siteReference} · {assessmentHeader.standardLabel} ·{' '}
+              {assessmentHeader.assessorType} assessment
+            </span>
+          </button>
+        )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
         <div
           style={{
             display: 'flex',
@@ -96,14 +137,9 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
           <option value="offline">sim: offline</option>
         </select>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          iconLeft={<Icon name="lock" size={14} />}
-          onClick={() => void lock()}
-        >
-          Lock
-        </Button>
+        <IconButton label="Lock the device" onClick={() => void lock()}>
+          <Icon name="lock" size={18} />
+        </IconButton>
 
         <Avatar name="Linh Pham" size={32} />
       </div>

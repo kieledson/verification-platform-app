@@ -28,17 +28,28 @@ export function AppShell() {
   }, [refresh])
 
   return (
-    // Caps the whole app at the design's native 1194px tablet-landscape
-    // width (README: "1194×834 tablet frame, iPad landscape") and centers
-    // it, with a neutral backdrop outside that frame — otherwise a wide
-    // desktop browser stretches everything edge-to-edge, which reads as
-    // "zoomed in" compared to the tablet-scale mockups.
-    <div style={{ height: '100%', background: 'var(--gray-200, #D8D8D8)', display: 'flex', justifyContent: 'center' }}>
+    // Caps the whole app at the design's native 1194x834 tablet-landscape
+    // frame (README: "1194×834 tablet frame, iPad landscape") and centers
+    // it both ways, with a neutral backdrop outside that frame — otherwise
+    // a wide/tall desktop browser stretches everything edge-to-edge, which
+    // reads as "zoomed in" compared to the tablet-scale mockups. `height`
+    // still shrinks below 834 on a shorter viewport (maxHeight only ever
+    // caps, never forces overflow).
+    <div
+      style={{
+        height: '100%',
+        background: 'var(--gray-200, #D8D8D8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <div
         style={{
           width: '100%',
           maxWidth: 1194,
           height: '100%',
+          maxHeight: 834,
           display: 'flex',
           flexDirection: 'column',
           background: '#fff',

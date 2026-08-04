@@ -18,3 +18,14 @@ body {
 * {
   box-sizing: border-box;
 }
+
+/* Browsers don't inherit font-family into form controls by default (a UA
+   stylesheet quirk, not a bug in any component) — every hand-written
+   <button>/<input>/<select> in this app was silently falling back to the
+   OS UI font instead of picking up Commissioner from the body. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
