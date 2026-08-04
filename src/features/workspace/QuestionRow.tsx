@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Icon } from '@/design-system/components'
 import { localize } from '@/standard/localize'
 import type { Answers } from '@/dependency-engine/expression/evaluate'
@@ -46,8 +46,23 @@ export function QuestionRow({
   const toggleGuidance = useUiStore((s) => s.toggleGuidance)
   const [siteMapExpanded, setSiteMapExpanded] = useState(false)
   const [pendingChange, setPendingChange] = useState<string | string[] | null>(null)
+  const guidanceRef = useRef<HTMLDivElement>(null)
 
   const answered = isQuestionEffectivelyAnswered(question.code)
+
+  // Closes the guidance popover on an outside click/tap — a floating
+  // popover (unlike the old push-down block) needs an explicit dismiss
+  // path since it no longer occupies layout space the user would notice.
+  useEffect(() => {
+    if (!openGuidance) return
+    function handlePointerDown(e: PointerEvent) {
+      if (guidanceRef.current && !guidanceRef.current.contains(e.target as Node)) {
+        toggleGuidance(question.code)
+      }
+    }
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [openGuidance, question.code, toggleGuidance])
 
   function commitAnswer(next: string | string[] | number) {
     setAnswer(question.code, next)
@@ -112,25 +127,54 @@ export function QuestionRow({
         <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '2px 10px' }}>
           <span style={{ fontSize: 13.5, lineHeight: 1.35, color: 'var(--text-body)' }}>{localize(question.text)}</span>
           {question.tooltip && (
-            <button
-              type="button"
-              onClick={() => toggleGuidance(question.code)}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                fontSize: 11.5,
-                fontWeight: 700,
-                color: 'var(--color-primary)',
-              }}
-            >
-              Guidance
-              <Icon name={openGuidance ? 'chevron-up' : 'chevron-down'} size={12} />
-            </button>
+            <div ref={guidanceRef} style={{ position: 'relative', display: 'inline-flex' }}>
+              <button
+                type="button"
+                onClick={() => toggleGuidance(question.code)}
+                aria-label="Guidance for this question"
+                aria-expanded={openGuidance}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: 18,
+                  height: 18,
+                  borderRadius: '50%',
+                  border: 'none',
+                  padding: 0,
+                  cursor: 'pointer',
+                  background: openGuidance ? 'var(--color-primary)' : 'var(--gray-100)',
+                  color: openGuidance ? '#fff' : 'var(--text-muted)',
+                  transition: 'background .15s ease, color .15s ease',
+                }}
+              >
+                <Icon name="info" size={12} />
+              </button>
+
+              {openGuidance && (
+                <div
+                  role="tooltip"
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: 0,
+                    marginTop: 6,
+                    width: 280,
+                    background: '#fff',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: '10px 12px',
+                    boxShadow: '0 8px 20px rgba(1,44,76,0.16)',
+                    fontSize: 12.5,
+                    lineHeight: 1.5,
+                    color: 'var(--text-muted)',
+                    zIndex: 20,
+                  }}
+                >
+                  {renderGuidance(localize(question.tooltip))}
+                </div>
+              )}
+            </div>
           )}
           {!question.isMandatory && (
             <span style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)' }}>Optional</span>
@@ -180,23 +224,6 @@ export function QuestionRow({
           ) : null}
         </div>
       </div>
-
-      {openGuidance && question.tooltip && (
-        <div
-          style={{
-            marginLeft: 32,
-            marginTop: 4,
-            marginBottom: 6,
-            paddingLeft: 12,
-            borderLeft: '2px solid var(--border)',
-            fontSize: 12.5,
-            lineHeight: 1.5,
-            color: 'var(--text-muted)',
-          }}
-        >
-          {renderGuidance(localize(question.tooltip))}
-        </div>
-      )}
 
       {alertText && <AlertBanner text={alertText} />}
 
