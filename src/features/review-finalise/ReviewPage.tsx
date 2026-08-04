@@ -9,6 +9,7 @@ import { useUiStore } from '@/state/uiStore'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
+import { relativeTime } from '@/lib/relativeTime'
 
 export function ReviewPage() {
   const { assessmentId } = useParams<{ assessmentId: string }>()
@@ -17,10 +18,17 @@ export function ReviewPage() {
   const openAssessment = useAssessmentStore((s) => s.openAssessment)
   const answers = useAssessmentStore((s) => s.answers)
   const visibility = useAssessmentStore((s) => s.visibility)
+  const lastSavedAt = useAssessmentStore((s) => s.lastSavedAt)
   const setAssessmentHeader = useUiStore((s) => s.setAssessmentHeader)
 
   const [assessment, setAssessment] = useState<AssessmentRecord | undefined>(undefined)
   const [site, setSite] = useState<SiteRecord | undefined>(undefined)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     if (assessmentId && assessmentId !== activeAssessmentId) void openAssessment(assessmentId)
@@ -42,12 +50,12 @@ export function ReviewPage() {
     setAssessmentHeader({
       farmName: site?.farmName ?? 'Assessment',
       siteReference: site?.referenceCode ?? '',
-      standardLabel: `Shrimp: Farm Standard ${assessment?.standardVersion?.split('v')[1] ?? '2.4'}`,
       assessorType: assessment?.assessorType ?? '',
+      savedLabel: lastSavedAt ? `Saved ${relativeTime(lastSavedAt, now)}` : null,
       onBack: () => navigate(`/assessments/${assessmentId}`),
     })
     return () => setAssessmentHeader(null)
-  }, [site, assessment, assessmentId, navigate, setAssessmentHeader])
+  }, [site, assessment, assessmentId, navigate, setAssessmentHeader, lastSavedAt, now])
 
   if (!assessmentId) return null
 

@@ -4,8 +4,10 @@ import { simulatedNetwork, type ConnectionMode } from '@/sync/simulatedNetwork'
 export interface AssessmentHeaderInfo {
   farmName: string
   siteReference: string
-  standardLabel: string
   assessorType: string
+  /** Live "Draft saved N ago" text, shown next to the pill. Omitted (or
+   * null) on screens like Review where it isn't meaningful. */
+  savedLabel?: string | null
   onBack: () => void
 }
 

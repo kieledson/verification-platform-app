@@ -10,20 +10,9 @@ import { QuestionRow } from '@/features/workspace/QuestionRow'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
+import { relativeTime } from '@/lib/relativeTime'
 
 const QUESTION_BY_ID = new Map<number, Question>(STANDARD.questions.map((q) => [q.id, q]))
-
-function relativeTime(ts: number, now: number): string {
-  const diffMin = Math.floor((now - ts) / 60000)
-  if (diffMin < 1) return 'just now'
-  if (diffMin === 1) return '1 min ago'
-  if (diffMin < 60) return `${diffMin} min ago`
-  const diffHr = Math.floor(diffMin / 60)
-  if (diffHr === 1) return '1 hour ago'
-  if (diffHr < 24) return `${diffHr} hours ago`
-  const diffDay = Math.floor(diffHr / 24)
-  return diffDay === 1 ? '1 day ago' : `${diffDay} days ago`
-}
 
 export function WorkspacePage() {
   const { assessmentId, sectionId } = useParams<{ assessmentId: string; sectionId?: string }>()
@@ -76,19 +65,20 @@ export function WorkspacePage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Renders the farm-details pill in the shared TopBar itself (matching the
-  // design's single 56px header bar) instead of a separate sub-header row.
+  // Renders the farm-details pill (plus live "draft saved" status) in the
+  // shared TopBar itself, matching the design's single 56px header bar,
+  // instead of a separate sub-header row or a footer buried in the rail.
   useEffect(() => {
     if (!site && !assessment) return
     setAssessmentHeader({
       farmName: site?.farmName ?? 'Assessment',
       siteReference: site?.referenceCode ?? '',
-      standardLabel: `Shrimp: Farm Standard ${assessment?.standardVersion?.split('v')[1] ?? '2.4'}`,
       assessorType: assessment?.assessorType ?? '',
+      savedLabel: lastSavedAt ? `Saved ${relativeTime(lastSavedAt, now)}` : 'Not yet saved',
       onBack: () => navigate('/assessments'),
     })
     return () => setAssessmentHeader(null)
-  }, [site, assessment, navigate, setAssessmentHeader])
+  }, [site, assessment, navigate, setAssessmentHeader, lastSavedAt, now])
 
   const engineAnswers = useMemo(() => toEngineAnswers(answers), [answers])
 
@@ -287,15 +277,8 @@ export function WorkspacePage() {
               flex: 'none',
               padding: '10px 18px',
               borderTop: '1px solid var(--border)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
-              <Icon name="save" size={13} />
-              Draft saved {lastSavedAt ? relativeTime(lastSavedAt, now) : 'not yet'}
-            </div>
             <Button variant="primary" block onClick={() => navigate(`/assessments/${assessmentId}/review`)}>
               Review &amp; finalise
             </Button>
