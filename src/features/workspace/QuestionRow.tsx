@@ -137,18 +137,17 @@ export function QuestionRow({
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: 18,
-                  height: 18,
-                  borderRadius: '50%',
+                  width: 22,
+                  height: 22,
                   border: 'none',
+                  background: 'none',
                   padding: 0,
                   cursor: 'pointer',
-                  background: openGuidance ? 'var(--color-primary)' : 'var(--gray-100)',
-                  color: openGuidance ? '#fff' : 'var(--text-muted)',
-                  transition: 'background .15s ease, color .15s ease',
+                  color: openGuidance ? 'var(--color-primary)' : 'var(--text-muted)',
+                  transition: 'color .15s ease',
                 }}
               >
-                <Icon name="info" size={12} />
+                <Icon name="circle-help" size={17} strokeWidth={1.75} />
               </button>
 
               {openGuidance && (
