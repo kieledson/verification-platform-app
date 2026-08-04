@@ -1,0 +1,10 @@
+.sfw-card{background:var(--surface-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-sm);color:var(--text-body);font-family:var(--font-sans);overflow:hidden;}
+.sfw-card--flat{box-shadow:none;}
+.sfw-card--raised{box-shadow:var(--shadow-md);border-color:transparent;}
+.sfw-card--interactive{cursor:pointer;transition:box-shadow .15s ease,transform .1s ease,border-color .15s ease;}
+.sfw-card--interactive:hover{box-shadow:var(--shadow-md);border-color:var(--gray-300);}
+.sfw-card--interactive:active{transform:translateY(1px);}
+.sfw-card--pad-sm{padding:var(--space-4);}
+.sfw-card--pad-md{padding:var(--space-6);}
+.sfw-card--pad-lg{padding:var(--space-8);}

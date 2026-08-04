@@ -1,0 +1,13 @@
+.sfw-radio{display:inline-flex;align-items:flex-start;gap:10px;font-family:var(--font-sans);
+  font-size:var(--text-base);color:var(--text-body);cursor:pointer;user-select:none;}
+.sfw-radio input{position:absolute;opacity:0;width:0;height:0;}
+.sfw-radio__dot{flex:none;width:20px;height:20px;border:1.5px solid var(--border-strong);
+  border-radius:var(--radius-circle);background:var(--white);margin-top:1px;display:grid;place-items:center;
+  transition:border-color .15s ease,box-shadow .15s ease;}
+.sfw-radio__dot::after{content:"";width:10px;height:10px;border-radius:var(--radius-circle);
+  background:var(--color-primary);opacity:0;transform:scale(.4);transition:opacity .12s,transform .12s;}
+.sfw-radio:hover .sfw-radio__dot{border-color:var(--color-primary);}
+.sfw-radio input:focus-visible + .sfw-radio__dot{box-shadow:var(--shadow-focus);}
+.sfw-radio input:checked + .sfw-radio__dot{border-color:var(--color-primary);}
+.sfw-radio input:checked + .sfw-radio__dot::after{opacity:1;transform:scale(1);}
+.sfw-radio input:disabled ~ *{opacity:.5;}

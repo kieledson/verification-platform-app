@@ -1,0 +1,12 @@
+.sfw-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:var(--text-xs);line-height:1;letter-spacing:.01em;
+  padding:5px 10px;border-radius:var(--radius-pill);white-space:nowrap;border:1px solid transparent;}
+.sfw-badge svg{width:13px;height:13px;}
+.sfw-badge--neutral{background:var(--gray-100);color:var(--gray-700);border-color:var(--gray-200);}
+.sfw-badge--brand{background:var(--color-primary-subtle);color:var(--color-primary);}
+.sfw-badge--info{background:var(--color-primary-subtle);color:var(--ocean);}
+.sfw-badge--success{background:#E1F3EF;color:var(--parrotfish-deep);}
+.sfw-badge--warning{background:#FCEAD8;color:var(--seastar-deep);}
+.sfw-badge--danger{background:var(--rating-avoid-soft);color:var(--octopus-deep);}
+.sfw-badge--solid{background:var(--color-primary);color:var(--white);}
+.sfw-badge--dot::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;}

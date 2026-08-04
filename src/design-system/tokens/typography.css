@@ -1,0 +1,40 @@
+/* ============================================================
+   Seafood Watch / MBA — Typography tokens
+   Nocturno (display/serif) · Peak (sans) · Peak Rounded (playful)
+   ============================================================ */
+:root {
+  /* families (see fonts.css for the substitute mapping) */
+  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;      /* Nocturno Display */
+  --font-serif:   'Newsreader', Georgia, 'Times New Roman', serif;      /* Nocturno Text (body serif) */
+  --font-sans:    'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* Peak */
+  --font-rounded: 'Baloo 2', 'Hanken Grotesk', sans-serif;              /* Peak Rounded */
+
+  /* weights */
+  --fw-regular: 400;  /* @kind font */
+  --fw-medium: 500;   /* @kind font */
+  --fw-semibold: 600; /* @kind font */
+  --fw-bold: 700;     /* @kind font */
+
+  /* type scale (rem, 16px base) */
+  --text-xs:   0.75rem;   /* 12 */
+  --text-sm:   0.875rem;  /* 14 */
+  --text-base: 1rem;      /* 16 */
+  --text-md:   1.125rem;  /* 18 */
+  --text-lg:   1.375rem;  /* 22 */
+  --text-xl:   1.75rem;   /* 28 */
+  --text-2xl:  2.25rem;   /* 36 */
+  --text-3xl:  3rem;      /* 48 */
+  --text-4xl:  4rem;      /* 64 */
+
+  /* line heights */
+  --leading-tight: 1.1;
+  --leading-snug: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* letter spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-caps: 0.08em; /* eyebrows / all-caps labels */
+}

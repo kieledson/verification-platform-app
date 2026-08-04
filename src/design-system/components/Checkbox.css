@@ -1,0 +1,13 @@
+.sfw-check{display:inline-flex;align-items:flex-start;gap:10px;font-family:var(--font-sans);
+  font-size:var(--text-base);color:var(--text-body);cursor:pointer;user-select:none;}
+.sfw-check input{position:absolute;opacity:0;width:0;height:0;}
+.sfw-check__box{flex:none;width:20px;height:20px;border:1.5px solid var(--border-strong);
+  border-radius:var(--radius-xs);background:var(--white);margin-top:1px;display:grid;place-items:center;
+  transition:background .15s ease,border-color .15s ease,box-shadow .15s ease;}
+.sfw-check__box svg{width:13px;height:13px;color:var(--white);opacity:0;transform:scale(.6);transition:opacity .12s,transform .12s;}
+.sfw-check:hover .sfw-check__box{border-color:var(--color-primary);}
+.sfw-check input:focus-visible + .sfw-check__box{box-shadow:var(--shadow-focus);}
+.sfw-check input:checked + .sfw-check__box{background:var(--color-primary);border-color:var(--color-primary);}
+.sfw-check input:checked + .sfw-check__box svg{opacity:1;transform:scale(1);}
+.sfw-check input:disabled ~ *{opacity:.5;}
+.sfw-check input:disabled + .sfw-check__box{cursor:not-allowed;}

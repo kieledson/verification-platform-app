@@ -1,0 +1,101 @@
+/* ============================================================
+   Seafood Watch / Monterey Bay Aquarium — Color tokens
+   Sampled from "MBA colors.pdf". Core = Ocean family.
+   ============================================================ */
+:root {
+  /* --- Core: Ocean family --- */
+  --ocean-light: #5FB3EF; /* Light Blue */
+  --ocean:       #005E9B; /* MBA Blue — primary brand color */
+  --ocean-deep:  #012C4C; /* Deep Blue */
+
+  /* --- Supporting neutrals: Gray family --- */
+  --gray-100: #F3F4F4; /* derived — lightest surface */
+  --gray-200: #D8D8D8;
+  --gray-300: #C8C9C3;
+  --gray-400: #AFAFAF;
+  --gray-500: #97969B;
+  --gray-600: #72777A;
+  --gray-700: #4B5054; /* derived */
+  --gray-800: #2B3033; /* derived — body text */
+
+  /* --- Supporting: Pearl family (warm off-whites) --- */
+  --pearl-50:  #FBFAE8;
+  --pearl-100: #EBE6D3;
+
+  --white: #FFFFFF;
+  --black: #000000;
+
+  /* --- Accent families (Light / Medium / Deep) --- */
+  --parrotfish-light: #76C8BA;
+  --parrotfish:       #01A58D;
+  --parrotfish-deep:  #01362C;
+
+  --kelp-light: #ABB43D;
+  --kelp:       #6B722E;
+  --kelp-deep:  #313B16;
+
+  --sand-light: #BD9F41;
+  --sand:       #634F1D;
+  --sand-deep:  #3B2C15;
+
+  --seastar-light: #F6A055;
+  --seastar:       #D86023;
+  --seastar-deep:  #6E2C14;
+
+  --octopus-light: #F0787A;
+  --octopus:       #BD2323;
+  --octopus-deep:  #6E1010;
+
+  --urchin-light: #C682B1;
+  --urchin:       #6A1A5B;
+  --urchin-deep:  #31152C;
+
+  /* --- Seafood Watch consumer ratings ---
+     Best Choice (green) & Good Alternative (yellow) are APPROXIMATED —
+     they weren't in the swatch PDF. Avoid uses the Octopus red. */
+  --rating-best:       #4C9F38; /* Best Choice — green (approx.) */
+  --rating-best-soft:  #E7F2E2;
+  --rating-good:       #F5B700; /* Good Alternative — yellow (approx.) */
+  --rating-good-soft:  #FCF1D2;
+  --rating-avoid:      var(--octopus); /* Avoid — red */
+  --rating-avoid-soft: #F7DCDC;
+
+  /* ============================================================
+     Semantic aliases — reference these in components
+     ============================================================ */
+  --color-primary:        var(--ocean);
+  --color-primary-hover:  #004E82;   /* ocean, darkened */
+  --color-primary-active:  #013F6B;
+  --color-primary-subtle: #E4F0F9;   /* light-blue tint surface */
+  --color-accent:         var(--ocean-light);
+
+  --text-strong: var(--ocean-deep);
+  --text-body:   var(--gray-800);
+  --text-muted:  var(--gray-600);
+  --text-onbrand: var(--white);
+  --text-link:   var(--ocean);
+
+  --surface:        var(--white);
+  --surface-sunken: var(--gray-100);
+  --surface-card:   var(--white);
+  --surface-brand:  var(--ocean);
+  --surface-brand-deep: var(--ocean-deep);
+  --surface-warm:   var(--pearl-50);
+
+  --border:        var(--gray-200);
+  --border-strong: var(--gray-400);
+  --border-brand:  var(--ocean);
+
+  --focus-ring: var(--ocean-light);
+
+  /* status */
+  --success: var(--parrotfish);
+  --warning: var(--seastar);
+  --danger:  var(--octopus);
+  --info:    var(--ocean);
+
+  /* highlight (comment mode) */
+  --highlight:        #FCE9A6;   /* active comment highlight (warm yellow) */
+  --highlight-hover:  #FBDE7A;
+  --highlight-resolved: #E4F0F9;
+}
