@@ -53,7 +53,10 @@ export function AppShell() {
           display: 'flex',
           flexDirection: 'column',
           background: '#fff',
-          boxShadow: '0 0 40px rgba(1,44,76,0.12)',
+          border: '10px solid var(--ocean-deep, #012C4C)',
+          borderRadius: 28,
+          overflow: 'hidden',
+          boxShadow: '0 0 40px rgba(1,44,76,0.18)',
         }}
       >
         <TopBar eyebrow="FIELD ASSESSMENT" />

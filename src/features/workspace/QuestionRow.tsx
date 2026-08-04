@@ -82,7 +82,7 @@ export function QuestionRow({
   }
 
   return (
-    <div style={{ borderBottom: '1px solid var(--gray-100)', padding: '3px 0' }}>
+    <div style={{ borderBottom: '1px solid var(--border)', padding: '3px 0' }}>
       <div
         style={{
           display: 'grid',
@@ -156,6 +156,7 @@ export function QuestionRow({
             <NumberControl
               value={typeof value === 'number' || typeof value === 'string' ? value : undefined}
               onChange={commitAnswer}
+              questionText={localize(question.text)}
             />
           ) : question.controlType === 'TEXT_MULTILINE' ? (
             <NarrativeControl value={typeof value === 'string' ? value : undefined} onChange={commitAnswer} />

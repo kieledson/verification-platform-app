@@ -16,8 +16,9 @@ export function NarrativeControl({
       style={{
         width: 340,
         borderRadius: 8,
+        fontSize: 13.5,
         background: 'var(--gray-100)',
-        border: '1px solid transparent',
+        border: '1px solid var(--border)',
         resize: 'vertical',
       }}
     />

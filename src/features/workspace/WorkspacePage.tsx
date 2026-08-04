@@ -218,8 +218,8 @@ export function WorkspacePage() {
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center',
-                    gap: 6,
-                    padding: '8px 18px',
+                    gap: 3,
+                    padding: '4px 18px',
                     border: 'none',
                     borderLeft: active ? '3px solid var(--ocean)' : '3px solid transparent',
                     background: active ? 'var(--color-primary-subtle)' : 'transparent',
@@ -227,17 +227,17 @@ export function WorkspacePage() {
                     textAlign: 'left',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span
                       style={{
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         borderRadius: '50%',
                         flex: 'none',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 10,
+                        fontSize: 9.5,
                         fontWeight: 700,
                         background: active ? 'var(--ocean)' : 'var(--gray-100)',
                         color: active ? '#fff' : 'var(--text-muted)',
@@ -259,11 +259,11 @@ export function WorkspacePage() {
                       {section.name}
                     </span>
                     {complete && (
-                      <Icon name="check-circle-2" size={14} style={{ color: 'var(--success)', flex: 'none' }} />
+                      <Icon name="check-circle-2" size={13} style={{ color: 'var(--success)', flex: 'none' }} />
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 28 }}>
-                    <div style={{ flex: 1, height: 4, borderRadius: 999, background: 'var(--gray-100)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 24 }}>
+                    <div style={{ flex: 1, height: 3, borderRadius: 999, background: 'var(--gray-100)' }}>
                       <div
                         style={{
                           width: total === 0 ? '0%' : `${Math.round((answered / total) * 100)}%`,
@@ -285,11 +285,11 @@ export function WorkspacePage() {
           <div
             style={{
               flex: 'none',
-              padding: '14px 18px',
+              padding: '10px 18px',
               borderTop: '1px solid var(--border)',
               display: 'flex',
               flexDirection: 'column',
-              gap: 10,
+              gap: 8,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--text-muted)' }}>
