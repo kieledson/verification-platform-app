@@ -12,8 +12,12 @@
 export function inferUnit(questionText: string): string | null {
   const text = questionText.toLowerCase()
 
-  if (/metric tons per hectare/.test(text)) return 'mt/ha'
+  // Confirmed literal unit strings from the Assessment Workspace v2 handoff's
+  // sample question data (Q_01_010, Q_01_011, Q_016/Q_062) — used verbatim
+  // rather than re-derived where they overlap.
+  if (/metric tons per hectare/.test(text)) return 'mt / ha'
   if (/hectares/.test(text)) return 'ha'
+  if (/how many production ponds/.test(text)) return 'ponds'
   if (/metric tons/.test(text)) return 'mt'
   if (/\bin percent\b/.test(text) || /percentage/.test(text)) return '%'
   if (/how many kg\b/.test(text) || /\bkg of\b/.test(text)) return 'kg'

@@ -12,6 +12,7 @@ import { clearHiddenAnswers } from '@/dependency-engine/visibility/clearHiddenAn
 import type { Answers } from '@/dependency-engine/expression/evaluate'
 import { debounce } from '@/lib/debounce'
 import { toEngineAnswers } from '@/standard/answerMapping'
+import { flatVisibleQuestions } from '@/features/workspace/flatQuestions'
 
 const visibilityResolver = createVisibilityResolver(STANDARD)
 
@@ -53,7 +54,10 @@ interface CoordState {
 interface AssessmentState {
   assessments: AssessmentRecord[]
   activeAssessmentId: string | null
-  activeSectionId: number | null
+  /** The single focused question code driving the ledger highlight, the
+   * answer dock's content and auto-scroll — see the Assessment Workspace v2
+   * handoff's "one currentCode" interaction model. */
+  currentCode: string | null
   answers: AnswerMap
   visibility: Record<string, boolean>
   lastSavedAt: number | null
@@ -66,8 +70,12 @@ interface AssessmentState {
 
   loadAssessments: () => Promise<void>
   openAssessment: (assessmentId: string) => Promise<void>
-  setActiveSection: (sectionId: number) => void
+  setCurrentCode: (code: string | null) => void
   setAnswer: (questionCode: string, value: string | string[] | number) => void
+  /** How many currently-answered questions would become hidden (and so
+   * cleared) if `questionCode` were changed to `value` — without actually
+   * committing the change. Backs the reset-warning dialog's exact count. */
+  previewResetCount: (questionCode: string, value: string | string[] | number) => number
   setCoordFormat: (format: 'dd' | 'dms') => void
   setPlacingPin: (placing: boolean) => void
   setPin: (pin: CoordState) => void
@@ -111,7 +119,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => {
   return {
     assessments: [],
     activeAssessmentId: null,
-    activeSectionId: null,
+    currentCode: null,
     answers: {},
     visibility: {},
     lastSavedAt: null,
@@ -131,11 +139,12 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => {
         assessmentsRepo.getAssessment(assessmentId),
       ])
       const visibilityById = computeAllVisibility(toEngineAnswers(answers))
+      const visibility = toCodeVisibility(visibilityById)
       set({
         activeAssessmentId: assessmentId,
-        activeSectionId: STANDARD.sections[0]?.id ?? null,
+        currentCode: flatVisibleQuestions(visibility)[0]?.question.code ?? null,
         answers,
-        visibility: toCodeVisibility(visibilityById),
+        visibility,
         // Reflects the persisted save time immediately on open, rather than
         // showing "not yet" until the user makes a fresh edit this session.
         lastSavedAt: record?.lastSavedAt ?? null,
@@ -147,7 +156,7 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => {
       })
     },
 
-    setActiveSection: (sectionId) => set({ activeSectionId: sectionId }),
+    setCurrentCode: (code) => set({ currentCode: code }),
 
     setAnswer: (questionCode, value) => {
       const { activeAssessmentId, answers } = get()
@@ -177,6 +186,30 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => {
         (code) => code !== questionCode && !(code in nextAnswers),
       )
       if (clearedCodes.length > 0) void answersRepo.clearAnswers(activeAssessmentId, clearedCodes)
+    },
+
+    previewResetCount: (questionCode, value) => {
+      const { answers } = get()
+      const engineBefore = toEngineAnswers(answers)
+      const visibilityBefore = computeAllVisibility(engineBefore)
+
+      const questionId = codeToId.get(questionCode)
+      const engineAfter: Answers = { ...engineBefore }
+      if (questionId !== undefined) engineAfter[questionId] = value
+
+      const visibilityAfter = computeAllVisibility(engineAfter)
+
+      let count = 0
+      for (const [id, wasVisible] of visibilityBefore) {
+        if (!wasVisible || visibilityAfter.get(id)) continue
+        const code = idToCode.get(id)
+        if (!code) continue
+        const val = answers[code]
+        const answered =
+          val !== undefined && val !== null && (Array.isArray(val) ? val.length > 0 : String(val).trim() !== '')
+        if (answered) count++
+      }
+      return count
     },
 
     setCoordFormat: (format) => set({ coordFormat: format }),

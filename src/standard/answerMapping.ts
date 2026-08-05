@@ -9,11 +9,11 @@ import type { Answers } from '@/dependency-engine/expression/evaluate'
  * confirmed to map every `Question.code` (canonical, no legacy aliases in
  * v2.4) 1:1 onto its numeric id — see `standard/schema/types.ts`.
  *
- * `assessmentStore.ts` and `QuestionRow.tsx` both need to go from the
- * code-keyed `AnswerMap` the rest of the app works with to the id-keyed
- * `Answers` shape `evaluateBoolExpr`/`resolveVisibility` expect. Rather than
- * each re-deriving that mapping (as `assessmentStore.ts` originally did
- * inline), both now import `resolveCode`/`toEngineAnswers` from here.
+ * `assessmentStore.ts`, `WorkspacePage.tsx` and `AnswerDock.tsx` all need to
+ * go from the code-keyed `AnswerMap` the rest of the app works with to the
+ * id-keyed `Answers` shape `evaluateBoolExpr`/`resolveVisibility` expect.
+ * Rather than each re-deriving that mapping, they import
+ * `resolveCode`/`toEngineAnswers` from here.
  */
 export function resolveCode(code: string): number {
   const id = STANDARD.codeAliases[code]

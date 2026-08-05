@@ -1,42 +1,56 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Button, Icon } from '@/design-system/components'
+import { Icon } from '@/design-system/components'
 import { STANDARD } from '@/standard/data/standard'
-import { toEngineAnswers } from '@/standard/answerMapping'
-import type { Question, Section } from '@/standard/schema/types'
-import { isQuestionEffectivelyAnswered, useAssessmentStore } from '@/state/assessmentStore'
-import { useUiStore } from '@/state/uiStore'
-import { QuestionRow } from '@/features/workspace/QuestionRow'
+import { toEngineAnswers, resolveCode } from '@/standard/answerMapping'
+import { evaluateBoolExpr } from '@/dependency-engine/expression/evaluate'
+import { useAssessmentStore } from '@/state/assessmentStore'
+import { flatVisibleQuestions, isAnswered, type FlatQuestionEntry } from '@/features/workspace/flatQuestions'
+import { AssessmentChrome } from '@/features/workspace/AssessmentChrome'
+import { AnswerLedger } from '@/features/workspace/AnswerLedger'
+import { AnswerDock } from '@/features/workspace/AnswerDock'
+import { ConfirmResetDialog } from '@/features/workspace/ConfirmResetDialog'
+import { sortOptionsForDisplay } from '@/features/workspace/controls/pillStyle'
+import { localize } from '@/standard/localize'
+import { relativeTime } from '@/lib/relativeTime'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
+import type { Question } from '@/standard/schema/types'
 
-const QUESTION_BY_ID = new Map<number, Question>(STANDARD.questions.map((q) => [q.id, q]))
+interface PendingChange {
+  question: Question
+  value: string
+  count: number
+}
 
 export function WorkspacePage() {
-  const { assessmentId, sectionId } = useParams<{ assessmentId: string; sectionId?: string }>()
+  const { assessmentId } = useParams<{ assessmentId: string }>()
   const navigate = useNavigate()
 
   const openAssessment = useAssessmentStore((s) => s.openAssessment)
   const activeAssessmentId = useAssessmentStore((s) => s.activeAssessmentId)
-  const activeSectionId = useAssessmentStore((s) => s.activeSectionId)
-  const setActiveSection = useAssessmentStore((s) => s.setActiveSection)
+  const currentCode = useAssessmentStore((s) => s.currentCode)
+  const setCurrentCode = useAssessmentStore((s) => s.setCurrentCode)
   const answers = useAssessmentStore((s) => s.answers)
   const visibility = useAssessmentStore((s) => s.visibility)
   const lastSavedAt = useAssessmentStore((s) => s.lastSavedAt)
-  const onlyUnanswered = useUiStore((s) => s.onlyUnanswered)
-  const toggleOnlyUnanswered = useUiStore((s) => s.toggleOnlyUnanswered)
-  const setAssessmentHeader = useUiStore((s) => s.setAssessmentHeader)
+  const setAnswer = useAssessmentStore((s) => s.setAnswer)
+  const previewResetCount = useAssessmentStore((s) => s.previewResetCount)
 
   const [assessment, setAssessment] = useState<AssessmentRecord | undefined>(undefined)
   const [site, setSite] = useState<SiteRecord | undefined>(undefined)
+  const [now, setNow] = useState(() => Date.now())
+  const [flashCode, setFlashCode] = useState<string | null>(null)
+  const [pending, setPending] = useState<PendingChange | null>(null)
 
-  // Load (or switch to) the assessment named by the route, guarding against
-  // re-running the (async, DB-hitting) open on every render.
+  const ledgerRef = useRef<HTMLDivElement>(null)
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const needScrollRef = useRef(false)
+
   useEffect(() => {
-    if (assessmentId && activeAssessmentId !== assessmentId) {
-      void openAssessment(assessmentId)
-    }
+    if (assessmentId && activeAssessmentId !== assessmentId) void openAssessment(assessmentId)
   }, [assessmentId, activeAssessmentId, openAssessment])
 
   useEffect(() => {
@@ -49,353 +63,223 @@ export function WorkspacePage() {
     void sitesRepo.getSite(assessment.farmSiteId).then(setSite)
   }, [assessment])
 
-  // Keep the URL's :sectionId (when present) and the store's activeSectionId
-  // in sync, e.g. on a hard refresh landing directly on a section route.
   useEffect(() => {
-    if (!sectionId) return
-    const id = Number(sectionId)
-    if (!Number.isNaN(id) && id !== activeSectionId) setActiveSection(id)
-  }, [sectionId, activeSectionId, setActiveSection])
+    const timer = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(timer)
+  }, [])
 
-  // Renders the farm-details pill (plus live "draft saved" status) in the
-  // shared TopBar itself, matching the design's single 56px header bar,
-  // instead of a separate sub-header row or a footer buried in the rail.
-  useEffect(() => {
-    if (!site && !assessment) return
-    setAssessmentHeader({
-      farmName: site?.farmName ?? 'Assessment',
-      siteReference: site?.referenceCode ?? '',
-      assessorType: assessment?.assessorType ?? '',
-      lastSavedAt,
-      onBack: () => navigate('/assessments'),
-    })
-    return () => setAssessmentHeader(null)
-  }, [site, assessment, navigate, setAssessmentHeader, lastSavedAt])
+  useEffect(() => () => clearTimeout(advanceTimerRef.current), [])
+  useEffect(() => () => clearTimeout(flashTimerRef.current), [])
 
+  const flat = useMemo(() => flatVisibleQuestions(visibility), [visibility])
   const engineAnswers = useMemo(() => toEngineAnswers(answers), [answers])
 
-  const sectionStats = useMemo(
-    () =>
-      STANDARD.sections.map((section) => {
-        const questions = section.questionIds.map((id) => QUESTION_BY_ID.get(id)).filter((q): q is Question => !!q)
-        const mandatoryVisible = questions.filter((q) => q.isMandatory && visibility[q.code])
-        const answeredCount = mandatoryVisible.filter((q) => isQuestionEffectivelyAnswered(q.code)).length
-        return { section, total: mandatoryVisible.length, answered: answeredCount }
-      }),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- answers feeds isQuestionEffectivelyAnswered indirectly via the store
-    [visibility, answers],
-  )
+  const currentIndex = flat.findIndex((x) => x.question.code === currentCode)
+  const currentEntry: FlatQuestionEntry | undefined = flat[currentIndex]
 
-  const overall = useMemo(() => {
-    const totals = sectionStats.reduce(
-      (acc, s) => ({ answered: acc.answered + s.answered, total: acc.total + s.total }),
-      { answered: 0, total: 0 },
-    )
-    const percent = totals.total === 0 ? 0 : Math.round((totals.answered / totals.total) * 100)
-    return { ...totals, percent }
-  }, [sectionStats])
+  const siteLabel = site ? `${site.farmName} · ${site.referenceCode}` : ''
 
-  const activeSection: Section | undefined =
-    STANDARD.sections.find((s) => s.id === activeSectionId) ?? STANDARD.sections[0]
-
-  const sectionQuestions = useMemo(() => {
-    if (!activeSection) return []
-    return activeSection.questionIds
-      .map((id) => QUESTION_BY_ID.get(id))
-      .filter((q): q is Question => !!q && !!visibility[q.code])
-  }, [activeSection, visibility])
-
-  // Per the README: compute the "N questions apply" / "N of M still to
-  // answer" counts from this UNFILTERED visible list — deriving them from
-  // the already-onlyUnanswered-filtered list was a real bug in the original
-  // design.
-  const totalVisible = sectionQuestions.length
-  const unansweredCount = sectionQuestions.filter((q) => !isQuestionEffectivelyAnswered(q.code)).length
-  const countText = onlyUnanswered
-    ? `${unansweredCount} of ${totalVisible} still to answer`
-    : `${totalVisible} question${totalVisible === 1 ? '' : 's'} apply to this farm`
-
-  function passesFilter(q: Question): boolean {
-    return !onlyUnanswered || !isQuestionEffectivelyAnswered(q.code)
+  function scrollToActive() {
+    requestAnimationFrame(() => {
+      const box = ledgerRef.current
+      const row = box?.querySelector<HTMLElement>(`[data-row="${currentCode}"]`)
+      if (box && row) box.scrollTo({ top: Math.max(0, row.offsetTop - box.clientHeight * 0.55), behavior: 'smooth' })
+    })
   }
 
-  function handleSectionClick(section: Section) {
-    setActiveSection(section.id)
-    navigate(`/assessments/${assessmentId}/section/${section.id}`)
+  useEffect(() => {
+    if (needScrollRef.current) {
+      needScrollRef.current = false
+      scrollToActive()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only scroll on explicit navigation, not on every answers/flat change
+  }, [currentCode])
+
+  // Initial scroll once the assessment (and its flat list) is ready.
+  useEffect(() => {
+    if (currentCode && flat.length > 0) scrollToActive()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once the ledger has content, not on every recompute
+  }, [assessmentId, flat.length > 0])
+
+  function goTo(code: string) {
+    setCurrentCode(code)
+    needScrollRef.current = true
   }
 
-  if (!assessmentId || activeAssessmentId !== assessmentId || !activeSection) {
+  function advance(dir: 1 | -1) {
+    const i = currentIndex === -1 ? 0 : currentIndex
+    const j = Math.min(Math.max(i + dir, 0), flat.length - 1)
+    const next = flat[j]
+    if (next) goTo(next.question.code)
+  }
+
+  function triggerFlash(code: string) {
+    setFlashCode(code)
+    clearTimeout(flashTimerRef.current)
+    flashTimerRef.current = setTimeout(() => setFlashCode((c) => (c === code ? null : c)), 800)
+  }
+
+  function commitGeneric(question: Question, value: string | string[] | number) {
+    setAnswer(question.code, value)
+    triggerFlash(question.code)
+  }
+
+  function commitAndMaybeAdvance(question: Question, value: string) {
+    setAnswer(question.code, value)
+    triggerFlash(question.code)
+    if (value === '') return // toggled off — stay put
+
+    let fires = false
+    if (question.notification) {
+      const after = { ...engineAnswers, [question.id]: value }
+      fires = evaluateBoolExpr(question.notification.expression, {
+        principalId: question.id,
+        answers: after,
+        resolveCode,
+      })
+    }
+    if (fires) return
+    clearTimeout(advanceTimerRef.current)
+    advanceTimerRef.current = setTimeout(() => advance(1), 420)
+  }
+
+  function pickSingle(question: Question, nextValue: string) {
+    const cur = answers[question.code]
+    const toggledOff = cur === nextValue
+    if (!toggledOff && cur !== undefined) {
+      const n = previewResetCount(question.code, nextValue)
+      if (n > 0) {
+        setPending({ question, value: nextValue, count: n })
+        return
+      }
+    }
+    commitAndMaybeAdvance(question, toggledOff ? '' : nextValue)
+  }
+
+  function pickMulti(question: Question, nextValues: string[]) {
+    commitGeneric(question, nextValues)
+  }
+
+  function jumpToSection(sectionId: number) {
+    const first = flat.find((x) => x.sectionId === sectionId)
+    if (first) goTo(first.question.code)
+  }
+
+  // Keyboard: 1–9 pick options, Enter advances — ignored while typing in an
+  // input/textarea (each control's own onEnter handles Enter there), while
+  // the reset dialog is open.
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return
+      if (pending) return
+      if (!currentEntry) return
+      if (e.key === 'Enter') {
+        advance(1)
+        return
+      }
+      const n = Number.parseInt(e.key, 10)
+      if (Number.isNaN(n) || n < 1) return
+      const q = currentEntry.question
+      const ordered = sortOptionsForDisplay(q.options)
+      if (n > ordered.length) return
+      if (q.controlType === 'SINGLE_SELECT' || q.controlType === 'SINGLE_SELECT_MODAL') {
+        pickSingle(q, ordered[n - 1].value)
+      } else if (q.controlType === 'MULTI_SELECT' || q.controlType === 'MULTI_SELECT_MODAL') {
+        const cur = answers[q.code]
+        const arr = Array.isArray(cur) ? cur : []
+        const v = ordered[n - 1].value
+        pickMulti(q, arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handler closes over current state deliberately re-bound each render
+  })
+
+  if (!assessmentId || activeAssessmentId !== assessmentId) {
     return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Loading assessment…</div>
   }
 
-  const sectionIndex = STANDARD.sections.findIndex((s) => s.id === activeSection.id)
+  const savedText = lastSavedAt ? `Draft saved ${relativeTime(lastSavedAt, now)}` : 'Draft saved just now'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        {/* Left rail */}
-        <div
-          style={{
-            width: 288,
-            flex: 'none',
-            background: '#fff',
-            borderRight: '1px solid var(--border)',
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          <div
-            style={{
-              height: 86,
-              flex: 'none',
-              borderBottom: '1px solid var(--border)',
-              padding: '12px 18px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 6,
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-              <span
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Assessment progress
-              </span>
-              <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--ocean-deep)' }}>{overall.percent}%</span>
-            </div>
-            <div style={{ height: 7, borderRadius: 999, background: 'var(--gray-100)' }}>
-              <div
-                style={{
-                  width: `${overall.percent}%`,
-                  height: '100%',
-                  borderRadius: 999,
-                  background: 'var(--ocean)',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-              {overall.answered} of {overall.total} questions answered for this farm
-            </span>
-          </div>
+      <AssessmentChrome
+        mode="assess"
+        assessmentId={assessmentId}
+        farmName={site?.farmName ?? 'Assessment'}
+        siteReference={site?.referenceCode ?? ''}
+        assessorType={assessment?.assessorType ?? ''}
+        onToggleReview={() => navigate(`/assessments/${assessmentId}/review`)}
+        onPickSection={jumpToSection}
+      />
 
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-            {sectionStats.map(({ section, total, answered }, index) => {
-              const active = section.id === activeSection.id
-              const complete = total > 0 && answered === total
-              return (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => handleSectionClick(section)}
-                  style={{
-                    flex: '1 1 0',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    gap: 3,
-                    padding: '4px 18px',
-                    border: 'none',
-                    borderLeft: active ? '3px solid var(--ocean)' : '3px solid transparent',
-                    background: active ? 'var(--color-primary-subtle)' : 'transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span
-                      style={{
-                        width: 16,
-                        height: 16,
-                        borderRadius: '50%',
-                        flex: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 9.5,
-                        fontWeight: 700,
-                        background: active ? 'var(--ocean)' : 'var(--gray-100)',
-                        color: active ? '#fff' : 'var(--text-muted)',
-                      }}
-                    >
-                      {index + 1}
-                    </span>
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: 12.5,
-                        fontWeight: 700,
-                        color: active ? 'var(--ocean-deep)' : 'var(--text-body)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {section.name}
-                    </span>
-                    {complete && (
-                      <Icon name="check-circle-2" size={13} style={{ color: 'var(--success)', flex: 'none' }} />
-                    )}
-                  </div>
-                  <div style={{ paddingLeft: 24 }}>
-                    <div style={{ height: 3, borderRadius: 999, background: 'var(--gray-100)' }}>
-                      <div
-                        style={{
-                          width: total === 0 ? '0%' : `${Math.round((answered / total) * 100)}%`,
-                          height: '100%',
-                          borderRadius: 999,
-                          background: complete ? 'var(--success)' : 'var(--ocean-light)',
-                        }}
-                      />
-                    </div>
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+      <AnswerLedger
+        ref={ledgerRef}
+        flat={flat}
+        answers={answers}
+        currentCode={currentCode}
+        flashCode={flashCode}
+        siteLabel={siteLabel}
+        onPick={goTo}
+      />
 
-          <div
-            style={{
-              flex: 'none',
-              padding: '10px 18px',
-              borderTop: '1px solid var(--border)',
-            }}
-          >
-            <Button variant="primary" block onClick={() => navigate(`/assessments/${assessmentId}/review`)}>
-              Review &amp; finalise
-            </Button>
-          </div>
-        </div>
+      {currentEntry && (
+        <AnswerDock
+          question={currentEntry.question}
+          positionLabel={`${STANDARD.sections.find((s) => s.id === currentEntry.sectionId)?.name ?? ''} · ${
+            flat.filter((x) => x.sectionId === currentEntry.sectionId).findIndex((x) => x.question.code === currentCode) + 1
+          } of ${flat.filter((x) => x.sectionId === currentEntry.sectionId).length}`}
+          value={answers[currentEntry.question.code]}
+          engineAnswers={engineAnswers}
+          assessmentId={assessmentId}
+          farmSiteId={assessment?.farmSiteId ?? ''}
+          onPickSingle={(v) => pickSingle(currentEntry.question, v)}
+          onPickMulti={(v) => pickMulti(currentEntry.question, v)}
+          onCommit={(v) => commitGeneric(currentEntry.question, v)}
+          onEnter={() => advance(1)}
+          canGoPrev={currentIndex > 0}
+          answered={isAnswered(currentEntry.question, answers)}
+          onPrev={() => advance(-1)}
+          onNext={() => advance(1)}
+        />
+      )}
 
-        {/* Right pane */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <div
-            style={{
-              height: 86,
-              flex: 'none',
-              background: 'var(--surface-warm)',
-              borderBottom: '1px solid var(--border)',
-              padding: '12px 26px',
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'space-between',
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--text-muted)',
-                }}
-              >
-                Section {sectionIndex + 1} of {STANDARD.sections.length}
-              </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 25, fontWeight: 600, color: 'var(--text-strong)' }}>
-                {activeSection.name}
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button
-                type="button"
-                onClick={toggleOnlyUnanswered}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  height: 36,
-                  padding: '0 16px',
-                  borderRadius: 999,
-                  border: onlyUnanswered ? 'none' : '1px solid var(--border)',
-                  background: onlyUnanswered ? 'var(--ocean)' : '#fff',
-                  color: onlyUnanswered ? '#fff' : 'var(--text-body)',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                <Icon name="filter" size={14} />
-                Only unanswered
-              </button>
-              <span style={{ fontSize: 12.5, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{countText}</span>
-            </div>
-          </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', background: 'var(--surface-warm)', padding: '20px 26px 40px' }}>
-            <div
-              style={{
-                maxWidth: 980,
-                background: '#fff',
-                border: '1px solid var(--border)',
-                borderRadius: 12,
-                padding: '4px 16px 8px',
-              }}
-            >
-              {activeSection.subsections
-                ? activeSection.subsections.map((sub) => {
-                    const subQuestions = sub.questionIds
-                      .map((id) => QUESTION_BY_ID.get(id))
-                      .filter((q): q is Question => !!q && !!visibility[q.code] && passesFilter(q))
-                    if (subQuestions.length === 0) return null
-                    return (
-                      <div key={sub.name}>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em',
-                            color: 'var(--text-muted)',
-                            padding: '10px 4px 4px',
-                          }}
-                        >
-                          {sub.name}
-                        </div>
-                        {subQuestions.map((q) => (
-                          <QuestionRow
-                            key={q.id}
-                            question={q}
-                            assessmentId={assessmentId}
-                            farmSiteId={assessment?.farmSiteId ?? ''}
-                            engineAnswers={engineAnswers}
-                          />
-                        ))}
-                      </div>
-                    )
-                  })
-                : sectionQuestions.filter(passesFilter).map((q) => (
-                    <QuestionRow
-                      key={q.id}
-                      question={q}
-                      assessmentId={assessmentId}
-                      farmSiteId={assessment?.farmSiteId ?? ''}
-                      engineAnswers={engineAnswers}
-                    />
-                  ))}
-
-              {totalVisible === 0 && (
-                <div style={{ padding: 24, color: 'var(--text-muted)', fontSize: 13 }}>
-                  No questions apply to this farm in this section.
-                </div>
-              )}
-              {totalVisible > 0 && onlyUnanswered && unansweredCount === 0 && (
-                <div style={{ padding: 24, color: 'var(--text-muted)', fontSize: 13 }}>
-                  Every question in this section is answered.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      <div
+        style={{
+          flex: 'none',
+          height: 42,
+          background: '#fff',
+          borderTop: '1px solid var(--border)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 4,
+        }}
+      >
+        <Icon name="save" size={13} style={{ color: 'var(--text-muted)' }} />
+        <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{savedText}</span>
+        <span style={{ flex: 1 }} />
+        <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
+          Type <strong style={{ color: 'var(--text-body)' }}>1–9</strong> to answer ·{' '}
+          <strong style={{ color: 'var(--text-body)' }}>Enter</strong> next
+        </span>
       </div>
+
+      {pending && (
+        <ConfirmResetDialog
+          questionText={localize(pending.question.text)}
+          count={pending.count}
+          onConfirm={() => {
+            commitAndMaybeAdvance(pending.question, pending.value)
+            setPending(null)
+          }}
+          onCancel={() => setPending(null)}
+        />
+      )}
     </div>
   )
 }

@@ -19,26 +19,27 @@ export function sortOptionsForDisplay(options: AnswerOption[]): AnswerOption[] {
   })
 }
 
-/** Shared pill styling for single/multi-select answer options — 32px tall,
- * 8px radius, `min-width: 78px` so short labels (Yes/No/N/A) align down the
- * page. Selected = ocean fill + white text; unselected = white + border. */
-export function pillStyle(selected: boolean): React.CSSProperties {
+/** Shared chip styling for single/multi-select answer options, per the
+ * Assessment Workspace v2 handoff §C: 44px tall pills, `min-width: 92px`
+ * for short (<=4 char) labels like Yes/No/N/A so they align down the dock.
+ * Selected = ocean fill + white text + shadow; unselected = white + border. */
+export function pillStyle(selected: boolean, labelLength = 0): React.CSSProperties {
   return {
-    minWidth: 78,
-    height: 32,
-    padding: '0 14px',
-    borderRadius: 8,
-    display: 'flex',
+    minWidth: labelLength <= 4 ? 92 : 'auto',
+    height: 44,
+    padding: '0 18px',
+    borderRadius: 999,
+    display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 5,
-    fontSize: 13,
-    fontWeight: 500,
+    gap: 7,
+    fontSize: 14,
+    fontWeight: selected ? 700 : 600,
     border: selected ? '1px solid var(--ocean)' : '1px solid var(--border)',
     background: selected ? 'var(--ocean)' : '#fff',
     color: selected ? '#fff' : 'var(--text-body)',
+    boxShadow: selected ? '0 4px 12px rgba(1,44,76,0.22)' : 'none',
     cursor: 'pointer',
-    transition: 'background .15s ease, border-color .15s ease, color .15s ease',
-    lineHeight: 1,
+    transition: 'all 130ms ease',
   }
 }

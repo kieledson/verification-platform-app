@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
 import { Logo, Icon, Avatar, IconButton } from '@/design-system/components'
 import { useUiStore } from '@/state/uiStore'
 import { usePinLockStore } from '@/state/pinLockStore'
 import type { ConnectionMode } from '@/sync/simulatedNetwork'
-import { relativeTime } from '@/lib/relativeTime'
 
 const CONNECTION_ICON: Record<ConnectionMode, string> = {
   offline: 'cloud-off',
@@ -11,51 +9,21 @@ const CONNECTION_ICON: Record<ConnectionMode, string> = {
   wifi: 'wifi',
 }
 
-/** Top bar per the field-app design spec: 56px, white, 1px bottom border,
- * kelp mark + wordmark + eyebrow left; a single connection control, PIN-lock
- * button, avatar right. A real web app can't detect wifi vs. cellular, so
- * the connection control doubles as a dev/demo lever: it shows the current
- * simulated state (icon + label, grey when offline) and is itself the
- * `<select>` that changes it — one element, not a status pill plus a
- * separate hidden dropdown. */
+/** Plain white top bar for the assessment-list screen only — the workspace
+ * and review screens render their own dark chrome (`AssessmentChrome.tsx`,
+ * per the Assessment Workspace v2 handoff), so this no longer carries a
+ * farm-identity pill or save status; see `AppShell.tsx` for which route
+ * gets which header. A single connection control doubles as a dev/demo
+ * lever: it shows the current simulated state (icon + label, grey when
+ * offline) and is itself the `<select>` that changes it. */
 export function TopBar({ eyebrow }: { eyebrow: string }) {
   const connectionMode = useUiStore((s) => s.connectionMode)
   const setConnectionMode = useUiStore((s) => s.setConnectionMode)
-  const assessmentHeader = useUiStore((s) => s.assessmentHeader)
   const lock = usePinLockStore((s) => s.lock)
-
-  const [now, setNow] = useState(() => Date.now())
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(timer)
-  }, [])
-
-  // Pulses briefly on an actual new save (lastSavedAt changing), not on
-  // every 30s tick of the display text — a ref (not state) tracks the
-  // previously-seen timestamp precisely so ticking alone never re-triggers it.
-  const [justSaved, setJustSaved] = useState(false)
-  const prevSavedAtRef = useRef<number | null | undefined>(undefined)
-  useEffect(() => {
-    const current = assessmentHeader?.lastSavedAt ?? null
-    const prev = prevSavedAtRef.current
-    prevSavedAtRef.current = current
-    if (prev !== undefined && prev !== null && current !== null && current !== prev) {
-      setJustSaved(true)
-      const timer = setTimeout(() => setJustSaved(false), 1200)
-      return () => clearTimeout(timer)
-    }
-  }, [assessmentHeader?.lastSavedAt])
-
-  const savedText = !assessmentHeader
-    ? null
-    : assessmentHeader.lastSavedAt
-      ? `Saved ${relativeTime(assessmentHeader.lastSavedAt, now)}`
-      : 'Not yet saved'
 
   return (
     <header
       style={{
-        position: 'relative',
         height: 56,
         display: 'flex',
         alignItems: 'center',
@@ -86,79 +54,11 @@ export function TopBar({ eyebrow }: { eyebrow: string }) {
         </div>
       </div>
 
-      {assessmentHeader && (
-        <div
-          style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            maxWidth: 620,
-            minWidth: 0,
-          }}
-        >
-          <button
-            type="button"
-            onClick={assessmentHeader.onBack}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              border: '1px solid var(--ocean-light)',
-              background: 'var(--color-primary-subtle)',
-              borderRadius: 999,
-              padding: '6px 14px',
-              cursor: 'pointer',
-              fontSize: 12.5,
-              minWidth: 0,
-              overflow: 'hidden',
-            }}
-          >
-            <Icon name="chevron-left" size={14} style={{ color: 'var(--ocean-deep)', flex: 'none' }} />
-            <span
-              style={{
-                fontWeight: 700,
-                color: 'var(--ocean-deep)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {assessmentHeader.farmName}
-            </span>
-            <span style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-              {assessmentHeader.siteReference} · {assessmentHeader.assessorType} assessment
-            </span>
-          </button>
-
-          {savedText && (
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                fontSize: 11.5,
-                color: justSaved ? 'var(--success)' : 'var(--text-muted)',
-                whiteSpace: 'nowrap',
-                flex: 'none',
-                transition: 'color 0.4s ease',
-              }}
-            >
-              <Icon name={justSaved ? 'check' : 'save'} size={12} />
-              {savedText}
-            </span>
-          )}
-        </div>
-      )}
-
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
         {/* Shows the current simulated connection (icon + label, grey when
-            offline) and doubles as the demo control that changes it — see
-            the note on ConnectionMode above. The dashed ring is the only
-            visual cue that this is a demo lever rather than a real network
-            indicator; kept faint so it doesn't compete with the pill itself. */}
+            offline) and doubles as the demo control that changes it. The
+            dashed ring is the only visual cue that this is a demo lever
+            rather than a real network indicator. */}
         <div
           title="Demo control — simulates the device's network state"
           style={{

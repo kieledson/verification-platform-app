@@ -1,30 +1,13 @@
 import { create } from 'zustand'
 import { simulatedNetwork, type ConnectionMode } from '@/sync/simulatedNetwork'
 
-export interface AssessmentHeaderInfo {
-  farmName: string
-  siteReference: string
-  assessorType: string
-  /** Raw save timestamp, not pre-formatted text — the TopBar owns the
-   * ticking "N ago" display and uses changes in this value (not the
-   * formatted string, which changes every tick regardless) to know when a
-   * real save just happened and briefly highlight it. */
-  lastSavedAt: number | null
-  onBack: () => void
-}
-
 interface UiState {
   connectionMode: ConnectionMode
-  onlyUnanswered: boolean
+  /** Keyed by question code — the answer dock's guidance disclosure state
+   * (see `AnswerDock.tsx`). */
   openGuidance: Record<string, boolean>
-  /** Set by the workspace/review screens so the shared TopBar can render
-   * the farm-details pill in the header itself, rather than each screen
-   * drawing its own separate sub-header row below the app bar. */
-  assessmentHeader: AssessmentHeaderInfo | null
   setConnectionMode: (mode: ConnectionMode) => void
-  toggleOnlyUnanswered: () => void
   toggleGuidance: (questionCode: string) => void
-  setAssessmentHeader: (info: AssessmentHeaderInfo | null) => void
 }
 
 export const useUiStore = create<UiState>((set) => {
@@ -32,22 +15,16 @@ export const useUiStore = create<UiState>((set) => {
 
   return {
     connectionMode: simulatedNetwork.getMode(),
-    onlyUnanswered: false,
     openGuidance: {},
-    assessmentHeader: null,
 
     setConnectionMode: (mode) => {
       simulatedNetwork.setMode(mode)
       set({ connectionMode: mode })
     },
 
-    toggleOnlyUnanswered: () => set((s) => ({ onlyUnanswered: !s.onlyUnanswered })),
-
     toggleGuidance: (questionCode) =>
       set((s) => ({
         openGuidance: { ...s.openGuidance, [questionCode]: !s.openGuidance[questionCode] },
       })),
-
-    setAssessmentHeader: (info) => set({ assessmentHeader: info }),
   }
 })

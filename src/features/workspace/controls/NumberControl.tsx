@@ -1,9 +1,12 @@
 import { Input } from '@/design-system/components'
 import { inferUnit } from '@/standard/inferUnit'
 
+const WIDTH = 220
+
 export function NumberControl({
   value,
   onChange,
+  onEnter,
   questionText,
 }: {
   value: number | string | undefined
@@ -13,6 +16,8 @@ export function NumberControl({
    * `resolveVisibility.ts`), so `NaN` would wrongly read as answered. An
    * empty string correctly reads as unanswered. */
   onChange: (next: number | string) => void
+  /** Fires on Enter, matching the dock's "Enter advances" behaviour. */
+  onEnter?: () => void
   /** Used only to infer a display unit (e.g. "ha", "mt") from the
    * question's own wording — see `inferUnit`. */
   questionText?: string
@@ -20,20 +25,24 @@ export function NumberControl({
   const unit = questionText ? inferUnit(questionText) : null
 
   return (
-    <div style={{ position: 'relative', width: 340 }}>
+    <div style={{ position: 'relative', width: WIDTH }}>
       <Input
         type="number"
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value === '' ? '' : Number(e.target.value))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onEnter?.()
+        }}
         placeholder="Type your answer"
         style={{
-          width: 340,
-          height: 34,
-          borderRadius: 8,
-          fontSize: 13.5,
-          background: 'var(--gray-100)',
+          width: WIDTH,
+          height: 48,
+          borderRadius: 10,
+          fontSize: 15,
+          fontWeight: 600,
+          background: '#fff',
           border: '1px solid var(--border)',
-          paddingRight: unit ? 14 + unit.length * 7.5 : undefined,
+          paddingRight: unit ? 15 + unit.length * 8 : undefined,
         }}
       />
       {unit && (
@@ -41,11 +50,14 @@ export function NumberControl({
           aria-hidden="true"
           style={{
             position: 'absolute',
-            right: 14,
-            top: '50%',
-            transform: 'translateY(-50%)',
+            right: 15,
+            top: 0,
+            height: 48,
+            display: 'flex',
+            alignItems: 'center',
             pointerEvents: 'none',
-            fontSize: 12.5,
+            fontSize: 13,
+            fontWeight: 700,
             color: 'var(--text-muted)',
           }}
         >

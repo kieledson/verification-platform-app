@@ -7,21 +7,30 @@ import { Input } from '@/design-system/components'
 export function TextControl({
   value,
   onChange,
+  onEnter,
+  placeholder,
 }: {
   value: string | undefined
   onChange: (next: string) => void
+  /** Fires on Enter, matching the dock's "Enter advances" behaviour. */
+  onEnter?: () => void
+  placeholder?: string
 }) {
   return (
     <Input
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
-      placeholder="Type your answer"
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') onEnter?.()
+      }}
+      placeholder={placeholder ?? 'Type your answer'}
       style={{
         width: 340,
-        height: 34,
-        borderRadius: 8,
-        fontSize: 13.5,
-        background: 'var(--gray-100)',
+        height: 48,
+        borderRadius: 10,
+        fontSize: 15,
+        fontWeight: 600,
+        background: '#fff',
         border: '1px solid var(--border)',
       }}
     />

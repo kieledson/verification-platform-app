@@ -11,7 +11,6 @@ export const router = createHashRouter([
       { path: '/', element: <Navigate to="/assessments" replace /> },
       { path: '/assessments', element: <AssessmentListPage /> },
       { path: '/assessments/:assessmentId', element: <WorkspacePage /> },
-      { path: '/assessments/:assessmentId/section/:sectionId', element: <WorkspacePage /> },
       { path: '/assessments/:assessmentId/review', element: <ReviewPage /> },
     ],
   },

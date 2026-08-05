@@ -25,16 +25,17 @@ export function MultiSelectControl({
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
       {sortOptionsForDisplay(options).map((opt) => {
         const selected = selectedValues.includes(opt.value)
+        const label = localize(opt.label)
         return (
           <button
             key={opt.value}
             type="button"
-            style={pillStyle(selected)}
+            style={pillStyle(selected, label.length)}
             aria-pressed={selected}
             onClick={() => toggle(opt.value)}
           >
             {selected && <Icon name="check" size={13} />}
-            {localize(opt.label)}
+            {label}
           </button>
         )
       })}

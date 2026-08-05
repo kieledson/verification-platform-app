@@ -15,27 +15,32 @@ export function EvidenceCard({ assessmentId }: { assessmentId: string }) {
   const totalBytes = attachments.reduce((n, a) => n + a.sizeBytes, 0)
 
   return (
-    <Card padding="md" style={{ marginBottom: 16 }}>
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid var(--border)',
+        borderRadius: 14,
+        padding: '16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 8,
+        boxShadow: '0 1px 2px rgba(1,44,76,0.05)',
+      }}
+    >
+      <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ocean)' }}>
         Evidence collected
-      </div>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 16, margin: '8px 0' }}>
-        <div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 600 }}>
-            {attachments.length}
-          </span>{' '}
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>photos</span>
-        </div>
-        <div>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 600 }}>
-            {formatBytes(totalBytes)}
-          </span>{' '}
-          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>on device</span>
-        </div>
+      </span>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 600, color: 'var(--text-strong)' }}>
+          {attachments.length}
+        </span>
+        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+          photos · {formatBytes(totalBytes)} on this tablet
+        </span>
       </div>
       <button
         onClick={() => setShowGallery(true)}
-        style={{ background: 'none', border: 'none', color: 'var(--color-primary, var(--ocean))', cursor: 'pointer', fontSize: 13, padding: 0 }}
+        style={{ background: 'none', border: 'none', color: 'var(--ocean)', cursor: 'pointer', fontSize: 12, fontWeight: 700, padding: 0, textAlign: 'left' }}
       >
         View photo gallery
       </button>
@@ -75,6 +80,6 @@ export function EvidenceCard({ assessmentId }: { assessmentId: string }) {
           </Card>
         </div>
       )}
-    </Card>
+    </div>
   )
 }

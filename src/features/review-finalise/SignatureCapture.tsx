@@ -1,4 +1,3 @@
-import { Card } from '@/design-system/components'
 import { useAssessmentStore } from '@/state/assessmentStore'
 import { signatureQuestions } from '@/features/review-finalise/SectionCompletionList'
 import { SignatureControl } from '@/features/workspace/controls/SignatureControl'
@@ -15,21 +14,32 @@ export function SignatureCapture() {
   const questions = signatureQuestions()
 
   return (
-    <Card padding="md">
-      <div style={{ fontSize: 10.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 10 }}>
+    <div
+      style={{
+        background: '#fff',
+        border: '1px solid var(--border)',
+        borderRadius: 14,
+        padding: '16px 18px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10,
+        boxShadow: '0 1px 2px rgba(1,44,76,0.05)',
+      }}
+    >
+      <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ocean)' }}>
         Signatures
-      </div>
+      </span>
       {questions.map((q) => {
         const value = answers[q.code]
         const signatureValue = typeof value === 'string' ? value : undefined
 
         return (
-          <div key={q.code} style={{ marginBottom: 12 }}>
-            <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 4 }}>{q.label}</div>
+          <div key={q.code} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <span style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{q.label}</span>
             <SignatureControl value={signatureValue} onChange={(next) => setAnswer(q.code, next)} />
           </div>
         )
       })}
-    </Card>
+    </div>
   )
 }

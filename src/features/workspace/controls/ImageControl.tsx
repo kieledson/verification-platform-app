@@ -61,14 +61,15 @@ export function ImageControl({
   }
 
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end', maxWidth: 340 }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'flex-end' }}>
       {attachments.map((a) => (
         <div
           key={a.id}
+          title={a.label}
           style={{
-            width: 44,
-            height: 32,
-            borderRadius: 6,
+            width: 74,
+            height: 54,
+            borderRadius: 8,
             overflow: 'hidden',
             border: '1px solid var(--border)',
             flex: 'none',
@@ -82,23 +83,24 @@ export function ImageControl({
 
       <label
         style={{
-          width: attachments.length === 0 ? 340 : 90,
-          height: 32,
-          borderRadius: 6,
+          width: 74,
+          height: 54,
+          borderRadius: 8,
           border: '1.5px dashed var(--border-strong)',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 6,
-          fontSize: 11.5,
+          gap: 3,
+          fontSize: 10,
           fontWeight: 700,
-          color: 'var(--color-primary)',
+          color: 'var(--ocean)',
           cursor: 'pointer',
           flex: 'none',
         }}
       >
-        <Icon name="camera" size={13} />
-        {attachments.length === 0 ? 'Take photo' : 'Add'}
+        <Icon name="camera" size={16} />
+        Photo
         <input
           ref={inputRef}
           type="file"

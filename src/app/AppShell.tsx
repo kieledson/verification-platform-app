@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { TopBar } from '@/app/TopBar'
 import { PinLockScreen } from '@/features/pin-lock/PinLockScreen'
 import { usePinLockStore } from '@/state/pinLockStore'
@@ -12,6 +12,11 @@ export function AppShell() {
   const refresh = usePinLockStore((s) => s.refresh)
   const [ready, setReady] = useState(false)
   usePinLockTimer()
+  const location = useLocation()
+  // The workspace and review screens render their own dark chrome
+  // (`AssessmentChrome.tsx`) in place of the plain white top bar — only the
+  // bare assessment list uses this one.
+  const showPlainTopBar = location.pathname === '/assessments'
 
   useEffect(() => {
     async function boot() {
@@ -60,8 +65,8 @@ export function AppShell() {
           boxShadow: '0 0 40px rgba(1,44,76,0.18)',
         }}
       >
-        <TopBar eyebrow="FIELD ASSESSMENT" />
-        <div style={{ flex: 1, minHeight: 0, background: 'var(--surface-warm, #FBFAE8)' }}>
+        {showPlainTopBar && <TopBar eyebrow="FIELD ASSESSMENT" />}
+        <div style={{ flex: 1, minHeight: 0, background: 'var(--surface-warm, #FBFAE8)', display: 'flex', flexDirection: 'column' }}>
           {ready ? <Outlet /> : null}
         </div>
         {isLocked && <PinLockScreen onUnlocked={() => void refresh()} />}
