@@ -100,9 +100,7 @@ export function QuestionRow({
     <div style={{ borderBottom: '1px solid var(--border)', padding: '3px 0' }}>
       <div
         style={{
-          display: 'grid',
-          gridTemplateColumns: '18px 1fr 340px',
-          gap: 14,
+          display: 'flex',
           alignItems: 'center',
           minHeight: 40,
         }}
@@ -119,12 +117,13 @@ export function QuestionRow({
             alignItems: 'center',
             justifyContent: 'center',
             flex: 'none',
+            marginRight: 14,
           }}
         >
           {answered && <Icon name="check" size={10} style={{ color: '#fff' }} />}
         </span>
 
-        <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '2px 10px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', gap: '2px 10px', flex: 1, minWidth: 0 }}>
           <span style={{ fontSize: 13.5, lineHeight: 1.35, color: 'var(--text-body)' }}>{localize(question.text)}</span>
           {question.tooltip && (
             <div ref={guidanceRef} style={{ position: 'relative', display: 'inline-flex' }}>
@@ -180,7 +179,7 @@ export function QuestionRow({
           )}
         </div>
 
-        <div style={{ width: 340, display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ width: 340, flex: 'none', marginLeft: 28, display: 'flex', justifyContent: 'flex-end' }}>
           {question.controlType === 'SINGLE_SELECT' || question.controlType === 'SINGLE_SELECT_MODAL' ? (
             <SingleSelectControl
               options={question.options}
