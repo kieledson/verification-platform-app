@@ -95,6 +95,9 @@ export function MultiSelectControl({
               boxShadow: '0 8px 20px rgba(1,44,76,0.16)',
               zIndex: 20,
               padding: 6,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
             }}
           >
             {ordered.map((opt) => {
@@ -112,7 +115,10 @@ export function MultiSelectControl({
                     padding: '9px 10px',
                     border: 'none',
                     borderRadius: 8,
-                    background: selected ? 'var(--ocean-light)' : 'transparent',
+                    // A pale wash rather than a solid fill — several
+                    // adjacent selected rows in a solid --ocean-light block
+                    // read as one big blob with no seams between them.
+                    background: selected ? 'rgba(95,179,239,0.3)' : 'transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: 13.5,

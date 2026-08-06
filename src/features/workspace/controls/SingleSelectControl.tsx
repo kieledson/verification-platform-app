@@ -90,6 +90,9 @@ export function SingleSelectControl({
               boxShadow: '0 8px 20px rgba(1,44,76,0.16)',
               zIndex: 20,
               padding: 6,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
             }}
           >
             {ordered.map((opt) => {
@@ -110,7 +113,7 @@ export function SingleSelectControl({
                     padding: '9px 10px',
                     border: 'none',
                     borderRadius: 8,
-                    background: selected ? 'var(--ocean-light)' : 'transparent',
+                    background: selected ? 'rgba(95,179,239,0.3)' : 'transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: 13.5,
