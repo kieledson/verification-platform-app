@@ -78,7 +78,7 @@ export function AnswerDock({
         background: '#fff',
         borderTop: '1px solid var(--border)',
         boxShadow: '0 -8px 24px rgba(1,44,76,0.08)',
-        padding: '16px 0 14px',
+        padding: '14px 0 10px',
         position: 'relative',
         zIndex: 4,
       }}
@@ -143,7 +143,7 @@ export function AnswerDock({
             )}
           </div>
 
-          <div style={{ flex: 'none', maxWidth: 470, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 10 }}>
+          <div style={{ flex: 'none', maxWidth: 470, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             {question.controlType === 'SINGLE_SELECT' || question.controlType === 'SINGLE_SELECT_MODAL' ? (
               <SingleSelectControl
                 options={question.options}
@@ -180,50 +180,50 @@ export function AnswerDock({
               <DateTimeControl value={typeof value === 'string' ? value : undefined} onChange={onCommit} />
             ) : null}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <button
                 type="button"
                 onClick={onPrev}
                 title="Previous question"
                 disabled={!canGoPrev}
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 999,
-                  border: '1px solid var(--border)',
-                  background: '#fff',
-                  color: 'var(--text-body)',
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px 6px',
+                  borderRadius: 6,
+                  color: 'var(--text-muted)',
                   cursor: canGoPrev ? 'pointer' : 'default',
-                  opacity: canGoPrev ? 1 : 0.4,
+                  opacity: canGoPrev ? 1 : 0.35,
                   pointerEvents: canGoPrev ? 'auto' : 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  gap: 2,
+                  fontSize: 12.5,
+                  fontWeight: 600,
                 }}
               >
-                <Icon name="arrow-up" size={14} />
+                <Icon name="chevron-left" size={14} />
+                <span>Prev</span>
               </button>
               <button
                 type="button"
                 onClick={onNext}
                 style={{
-                  height: 40,
-                  padding: '0 20px',
-                  borderRadius: 999,
-                  border: answered ? 'none' : '1px solid var(--border)',
-                  background: answered ? 'var(--ocean)' : '#fff',
-                  color: answered ? '#fff' : 'var(--text-muted)',
-                  fontSize: 13.5,
-                  fontWeight: 700,
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px 6px',
+                  borderRadius: 6,
+                  color: answered ? 'var(--ocean)' : 'var(--text-muted)',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 8,
-                  boxShadow: answered ? '0 4px 12px rgba(1,44,76,0.2)' : 'none',
+                  gap: 2,
+                  fontSize: 12.5,
+                  fontWeight: 700,
                 }}
               >
                 <span>{answered ? 'Next' : 'Skip'}</span>
-                <Icon name="arrow-down" size={14} />
+                <Icon name="chevron-right" size={14} />
               </button>
             </div>
           </div>
