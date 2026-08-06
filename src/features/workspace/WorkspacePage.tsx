@@ -12,7 +12,6 @@ import { AnswerDock } from '@/features/workspace/AnswerDock'
 import { ConfirmResetDialog } from '@/features/workspace/ConfirmResetDialog'
 import { sortOptionsForDisplay } from '@/features/workspace/controls/pillStyle'
 import { localize } from '@/standard/localize'
-import { relativeTime } from '@/lib/relativeTime'
 import * as assessmentsRepo from '@/db/repositories/assessments'
 import * as sitesRepo from '@/db/repositories/sites'
 import type { AssessmentRecord, SiteRecord } from '@/db/schema'
@@ -22,6 +21,10 @@ interface PendingChange {
   question: Question
   value: string
   count: number
+}
+
+function formatClockTime(ts: number): string {
+  return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 }
 
 export function WorkspacePage() {
@@ -201,7 +204,11 @@ export function WorkspacePage() {
     return <div style={{ padding: 40, color: 'var(--text-muted)' }}>Loading assessment…</div>
   }
 
-  const savedText = lastSavedAt ? `Draft saved ${relativeTime(lastSavedAt, now)}` : 'Draft saved just now'
+  const synced = assessment?.status === 'synced'
+  const savedText =
+    assessment && synced
+      ? `Saved on this device at ${formatClockTime(lastSavedAt ?? now)} · Synced at ${formatClockTime(assessment.updatedAt)}`
+      : `Saved on this device at ${formatClockTime(lastSavedAt ?? now)} · Not yet synced`
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -255,19 +262,15 @@ export function WorkspacePage() {
           borderTop: '1px solid var(--border)',
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'center',
           gap: 8,
           padding: '0 20px',
           position: 'relative',
           zIndex: 4,
         }}
       >
-        <Icon name="save" size={13} style={{ color: 'var(--text-muted)' }} />
+        <Icon name={synced ? 'check-circle-2' : 'hard-drive'} size={13} style={{ color: synced ? 'var(--success)' : 'var(--text-muted)' }} />
         <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>{savedText}</span>
-        <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 11.5, color: 'var(--text-muted)' }}>
-          Type <strong style={{ color: 'var(--text-body)' }}>1–9</strong> to answer ·{' '}
-          <strong style={{ color: 'var(--text-body)' }}>Enter</strong> next
-        </span>
       </div>
 
       {pending && (

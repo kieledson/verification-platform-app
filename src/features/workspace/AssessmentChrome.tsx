@@ -199,28 +199,13 @@ export function AssessmentChrome({
               const chrome = SECTION_CHROME[i] ?? { icon: 'circle', short: section.name }
               const c = counts.get(section.id) ?? { done: 0, total: 0 }
               const done = c.total > 0 && c.done === c.total
-              const started = c.done > 0
               const active = section.id === activeSectionId
-              let dotBg: string
-              let dotColor: string
-              let dotBorder = 'none'
-              let dotShadow = 'none'
-              if (active) {
-                dotBg = 'var(--ocean-light)'
-                dotColor = 'var(--ocean-deep)'
-                dotShadow = '0 0 0 5px rgba(95,179,239,0.25)'
-              } else if (done) {
-                dotBg = 'var(--ocean-light)'
-                dotColor = 'var(--ocean-deep)'
-              } else if (started) {
-                dotBg = 'var(--ocean)'
-                dotColor = '#fff'
-                dotBorder = '1.5px solid var(--ocean-light)'
-              } else {
-                dotBg = 'var(--ocean-deep)'
-                dotColor = 'rgba(255,255,255,0.55)'
-                dotBorder = '1.5px solid rgba(255,255,255,0.3)'
-              }
+              // Fill only ever signals completeness (green = done, light blue
+              // = not yet done); "you are here" is a separate yellow ring on
+              // top, so a section can be both active and done at once.
+              const dotBg = done ? 'var(--rating-best)' : 'var(--ocean-light)'
+              const dotColor = done ? '#fff' : 'var(--ocean-deep)'
+              const dotShadow = active ? '0 0 0 3px var(--rating-good)' : 'none'
               return (
                 <button
                   key={section.id}
@@ -250,7 +235,6 @@ export function AssessmentChrome({
                       justifyContent: 'center',
                       background: dotBg,
                       color: dotColor,
-                      border: dotBorder,
                       boxShadow: dotShadow,
                       transition: 'all 150ms ease',
                     }}
@@ -278,7 +262,7 @@ export function AssessmentChrome({
                       fontWeight: 700,
                       letterSpacing: '0.03em',
                       whiteSpace: 'nowrap',
-                      color: done ? 'var(--ocean-light)' : active ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.42)',
+                      color: done ? 'var(--rating-best)' : active ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.42)',
                     }}
                   >
                     {done ? 'Done' : `${c.total - c.done} left`}
