@@ -234,6 +234,9 @@ interface DemoSpec {
   createdDaysAgo: number
   updatedHoursAgo: number
   signerNames: [string, string]
+  /** Only assigned once an assessment has actually reached the server
+   * (`pending-upload`/`synced`) — draft/ready-to-sync stay unscored. */
+  outcome?: AssessmentRecord['outcome']
 }
 
 const DEMOS: DemoSpec[] = [
@@ -270,6 +273,7 @@ const DEMOS: DemoSpec[] = [
     createdDaysAgo: 6,
     updatedHoursAgo: 1,
     signerNames: ['Trần Văn Hải', 'Bến Tre Hai'],
+    outcome: 'Green',
   },
   {
     siteId: 'site-in-ap-0067',
@@ -281,6 +285,7 @@ const DEMOS: DemoSpec[] = [
     createdDaysAgo: 10,
     updatedHoursAgo: 72,
     signerNames: ['Priya Raman', 'Krishna Unit Manager'],
+    outcome: 'Green',
   },
 ]
 
@@ -334,6 +339,7 @@ async function doSeedDemoAssessments(): Promise<void> {
       createdAt,
       updatedAt,
       lastSavedAt: updatedAt,
+      outcome: demo.outcome ?? null,
     })
   }
 }

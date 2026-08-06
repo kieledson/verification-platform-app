@@ -2,12 +2,25 @@ import Dexie, { type EntityTable } from 'dexie'
 
 export type AssessmentStatus = 'draft' | 'ready-to-sync' | 'pending-upload' | 'synced'
 
+/** Provenance marker on an assessment, not a role — a group can require a
+ * target number of assessments from each type independently (company
+ * self-assessment, peer collaborator, third-party SGS). Per Document 2 §6.2. */
+export type AssessorType = 'None' | 'Company' | 'Collaborator' | 'SGS'
+
+/** Per Document 4 §10 — Grey is a first-class outcome ("did not meet
+ * Yellow"), not a null/unscored state. `null` here means genuinely
+ * unscored (e.g. not yet synced), distinct from a real Grey result. The
+ * actual Level-roll-up arithmetic that produces this value is server-side
+ * and was never recovered (Document 2 §12, Document 4 §5.1/§11) — these
+ * values are seed data, not computed from answers. */
+export type AssessmentOutcome = 'Green' | 'Yellow' | 'Grey' | null
+
 export interface AssessmentRecord {
   id: string
   farmSiteId: string
   groupId: string
   standardVersion: string
-  assessorType: 'None' | 'Company' | 'Collaborator' | 'SGS'
+  assessorType: AssessorType
   status: AssessmentStatus
   progressPct: number
   byteSize: number
@@ -16,6 +29,19 @@ export interface AssessmentRecord {
   lastSavedAt: number
   syncAttempts: number
   lastSyncError?: string
+  outcome: AssessmentOutcome
+  /** Iteration counter for the group's sampling round (Document 4 §5.1 —
+   * "BATCH is an iteration counter, not a derived ratio"). What actually
+   * closes a batch and opens the next one is explicitly undecoded in the
+   * source docs (Document 4 §11 Q2), so every seeded record here stays in
+   * a single batch (1) rather than modeling that unconfirmed trigger. */
+  batch: number
+  /** True only for the lightweight, header-only rows `seedReportAssessments.ts`
+   * adds purely so Reports (Assessment History, Internal Group Report) have
+   * enough real data to aggregate over — never opened in the workspace, and
+   * excluded from the Field App's "Your assessments" list. Undefined/false
+   * for every real, field-workable assessment. */
+  reportOnly?: boolean
 }
 
 /** One row per answer, not one JSON blob per assessment — matters once
@@ -95,6 +121,122 @@ export interface StandardCacheRow {
   cachedAt: number
 }
 
+// --- Portal entities (Document 2 §6-16, corrected by Document 4 §2) -------
+//
+// Management/reference data for the Security, Administration, Project
+// Preparation and Reports areas. No live permission enforcement — the
+// single local persona keeps full access throughout; these are CRUD
+// management screens over real local data, not an auth system.
+
+export type OrganisationType = 'Industry' | 'Government' | 'Academic' | 'NGO' | 'Certification Body' | 'System'
+export type UserStatus = 'Active' | 'Deactivated'
+
+export interface UserRecord {
+  id: string
+  email: string
+  displayName: string
+  roleIds: string[]
+  assessorType: AssessorType
+  organisationName: string
+  organisationType: OrganisationType
+  country: string
+  status: UserStatus
+  createdAt: number
+  updatedAt: number
+}
+
+/** Document 2 §7.2 — a role's grant for a claim is a scope, not a boolean. */
+export type PermissionScope = 'Global' | 'Filtered[PGS]' | 'Filtered[CTRY]' | 'None'
+
+export interface RoleRecord {
+  id: string
+  name: string
+  description: string
+}
+
+/** One row per (role, claim) — the 191-claim × 3-role matrix from Document 2
+ * §7.3, seeded verbatim from the doc and editable here (no live enforcement
+ * reads it back). */
+export interface RolePermissionRecord {
+  roleId: string
+  claimCode: string
+  scope: PermissionScope
+}
+
+export type InvitationStatus = 'Pending' | 'Accepted' | 'Expired'
+
+export interface InvitationRecord {
+  id: string
+  date: number
+  displayName: string
+  email: string
+  status: InvitationStatus
+  invitedBy: string
+}
+
+export interface ProjectRecord {
+  id: string
+  name: string
+  description: string
+  parentProjectId: string | null
+  totalEstimatedAnnualProduction: number
+  totalEstimatedSites: number
+  createdAt: number
+  updatedAt: number
+}
+
+export type GroupGoal = 'Green' | 'Yellow'
+export type GroupPhase = 'Live' | 'Pilot - Round 1' | 'N/A'
+
+export interface SiteGroupRecord {
+  id: string
+  projectId: string
+  name: string
+  description: string
+  personResponsible: string
+  totalEstimatedAnnualProduction: number
+  groupGoal: GroupGoal
+  groupPhase: GroupPhase
+  /** Assessor Type × Sample Size matrix (Document 2 §8.2) — the mechanism
+   * behind the group's target assessment counts per type. */
+  sampleSizes: { Company: number; Collaborator: number; SGS: number }
+  createdAt: number
+  updatedAt: number
+}
+
+export type ExportFormat = 'txt' | 'xlsx' | 'csv'
+export type ExportEntity = 'ActivityExt' | 'ActivityCheckExt' | 'SiteExt'
+
+export interface ExportTemplateField {
+  order: number
+  fieldKey: string
+  format: string
+  header: string
+}
+
+export interface ExportTemplateFilter {
+  andOr: 'AND' | 'OR'
+  criteria: string
+  operator: string
+  value: string
+  mandatory: boolean
+  editable: boolean
+}
+
+export interface ExportTemplateRecord {
+  id: string
+  name: string
+  format: ExportFormat
+  headerRow: boolean
+  entity: ExportEntity
+  fields: ExportTemplateField[]
+  filters: ExportTemplateFilter[]
+  owner: string
+  archived: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export class AppDB extends Dexie {
   assessments!: EntityTable<AssessmentRecord, 'id'>
   answers!: EntityTable<AnswerRecord, 'assessmentId'>
@@ -104,6 +246,13 @@ export class AppDB extends Dexie {
   pinLock!: EntityTable<PinLockState, 'id'>
   sites!: EntityTable<SiteRecord, 'id'>
   standardCache!: EntityTable<StandardCacheRow, 'versionKey'>
+  users!: EntityTable<UserRecord, 'id'>
+  roles!: EntityTable<RoleRecord, 'id'>
+  rolePermissions!: EntityTable<RolePermissionRecord, 'roleId'>
+  invitations!: EntityTable<InvitationRecord, 'id'>
+  projects!: EntityTable<ProjectRecord, 'id'>
+  siteGroups!: EntityTable<SiteGroupRecord, 'id'>
+  exportTemplates!: EntityTable<ExportTemplateRecord, 'id'>
 
   constructor(name = 'vp-field-app') {
     super(name)
@@ -117,6 +266,14 @@ export class AppDB extends Dexie {
       pinLock: 'id',
       sites: 'id, groupId',
       standardCache: 'versionKey',
+      users: 'id, status',
+      roles: 'id',
+      // Compound primary key: one row per (role, claim).
+      rolePermissions: '[roleId+claimCode], roleId',
+      invitations: 'id, status, date',
+      projects: 'id, parentProjectId',
+      siteGroups: 'id, projectId',
+      exportTemplates: 'id, archived',
     })
   }
 }

@@ -3,7 +3,15 @@ import { db, type AssessmentRecord, type AssessmentStatus } from '@/db/schema'
 export async function createAssessment(
   input: Omit<
     AssessmentRecord,
-    'status' | 'progressPct' | 'byteSize' | 'createdAt' | 'updatedAt' | 'lastSavedAt' | 'syncAttempts'
+    | 'status'
+    | 'progressPct'
+    | 'byteSize'
+    | 'createdAt'
+    | 'updatedAt'
+    | 'lastSavedAt'
+    | 'syncAttempts'
+    | 'outcome'
+    | 'batch'
   >,
 ): Promise<AssessmentRecord> {
   const now = Date.now()
@@ -16,6 +24,8 @@ export async function createAssessment(
     updatedAt: now,
     lastSavedAt: now,
     syncAttempts: 0,
+    outcome: null,
+    batch: 1,
   }
   await db.assessments.add(record)
   return record

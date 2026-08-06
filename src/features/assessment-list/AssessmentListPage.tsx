@@ -21,7 +21,12 @@ export function AssessmentListPage() {
 
   const siteById = useMemo(() => new Map(sites.map((s) => [s.id, s])), [sites])
 
-  const filtered = assessments.filter((a) => {
+  // Excludes the lightweight, header-only rows `seedReportAssessments.ts`
+  // adds purely so Reports has real data to aggregate over — those were
+  // never opened in the workspace and don't belong in this list.
+  const fieldAssessments = assessments.filter((a) => !a.reportOnly)
+
+  const filtered = fieldAssessments.filter((a) => {
     if (!query.trim()) return true
     const site = siteById.get(a.farmSiteId)
     const haystack = `${site?.farmName ?? ''} ${site?.referenceCode ?? ''} ${site?.groupName ?? ''}`.toLowerCase()
@@ -69,7 +74,7 @@ export function AssessmentListPage() {
 
       <OfflineBanner />
 
-      {filtered.length === 0 && assessments.length === 0 && (
+      {filtered.length === 0 && fieldAssessments.length === 0 && (
         <div style={{ padding: '64px 20px', textAlign: 'center' }}>
           <Icon name="clipboard-list" size={32} style={{ color: 'var(--border-strong)' }} />
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 19, fontWeight: 600, margin: '14px 0 6px' }}>
@@ -84,7 +89,7 @@ export function AssessmentListPage() {
         </div>
       )}
 
-      {filtered.length === 0 && assessments.length > 0 && (
+      {filtered.length === 0 && fieldAssessments.length > 0 && (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)', fontSize: 13 }}>
           No assessments match "{query}".
         </div>
