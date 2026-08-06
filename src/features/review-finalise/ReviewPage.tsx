@@ -56,6 +56,7 @@ export function ReviewPage() {
         farmName={site?.farmName ?? 'Assessment'}
         siteReference={site?.referenceCode ?? ''}
         assessorType={assessment?.assessorType ?? ''}
+        onBack={() => navigate('/assessments')}
         onToggleReview={() => navigate(`/assessments/${assessmentId}`)}
         onPickSection={jumpToSection}
       />

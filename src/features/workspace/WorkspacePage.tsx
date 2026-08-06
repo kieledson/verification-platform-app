@@ -211,6 +211,7 @@ export function WorkspacePage() {
         farmName={site?.farmName ?? 'Assessment'}
         siteReference={site?.referenceCode ?? ''}
         assessorType={assessment?.assessorType ?? ''}
+        onBack={() => navigate('/assessments')}
         onToggleReview={() => navigate(`/assessments/${assessmentId}/review`)}
         onPickSection={jumpToSection}
       />

@@ -5,6 +5,7 @@ import { useAssessmentStore } from '@/state/assessmentStore'
 import { useUiStore } from '@/state/uiStore'
 import { flatVisibleQuestions, perSectionCounts } from '@/features/workspace/flatQuestions'
 import { SyncDrawer } from '@/features/workspace/SyncDrawer'
+import { ConnectionPill } from '@/app/ConnectionPill'
 
 /** Icon + short label per section, in SortOrder — positional against
  * `STANDARD.sections`, which is confirmed to carry these exact 12 sections
@@ -30,6 +31,7 @@ export function AssessmentChrome({
   farmName,
   siteReference,
   assessorType,
+  onBack,
   onToggleReview,
   onPickSection,
 }: {
@@ -38,6 +40,8 @@ export function AssessmentChrome({
   farmName: string
   siteReference: string
   assessorType: string
+  /** Leaves the assessment entirely, back to the assessment list. */
+  onBack: () => void
   onToggleReview: () => void
   /** Jumps to a section's first visible question and switches to assess mode. */
   onPickSection: (sectionId: number) => void
@@ -80,6 +84,26 @@ export function AssessmentChrome({
           </span>
         </div>
         <div style={{ width: 1, height: 24, background: 'rgba(255,255,255,0.16)' }} />
+        <button
+          type="button"
+          onClick={onBack}
+          title="Back to assessment list"
+          style={{
+            width: 28,
+            height: 28,
+            flex: 'none',
+            borderRadius: 999,
+            border: 'none',
+            background: 'rgba(255,255,255,0.08)',
+            color: '#fff',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <Icon name="arrow-left" size={15} />
+        </button>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 15.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
             {farmName}
@@ -88,7 +112,7 @@ export function AssessmentChrome({
             {siteReference}
           </span>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.55)', whiteSpace: 'nowrap' }}>
-            Shrimp: Farm Standard v2.4 · {assessorType} assessment
+            {assessorType} assessment
           </span>
         </div>
         <div style={{ flex: 1 }} />
@@ -115,34 +139,31 @@ export function AssessmentChrome({
           <span>{mode === 'review' ? 'Back to questions' : 'Review & finalise'}</span>
         </button>
 
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <ConnectionPill dark />
           <button
             type="button"
             onClick={() => setSyncOpen((v) => !v)}
             title="Sync status"
             style={{
+              width: 22,
               height: 30,
-              padding: '0 13px',
+              flex: 'none',
               borderRadius: 999,
-              border: `1px solid ${online ? 'rgba(95,179,239,0.5)' : 'rgba(246,160,85,0.55)'}`,
-              background: 'rgba(255,255,255,0.06)',
-              color: online ? 'var(--ocean-light)' : 'var(--seastar-light)',
-              fontSize: 11.5,
-              fontWeight: 700,
+              border: 'none',
+              background: 'none',
+              color: 'rgba(255,255,255,0.7)',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 7,
+              justifyContent: 'center',
             }}
           >
-            <Icon name={online ? 'wifi' : 'cloud-off'} size={13} />
-            <span>{online ? 'Online' : 'Offline'}</span>
-            <Icon name={syncOpen ? 'chevron-up' : 'chevron-down'} size={11} />
+            <Icon name={syncOpen ? 'chevron-up' : 'chevron-down'} size={14} />
           </button>
           {syncOpen && (
             <SyncDrawer assessmentId={assessmentId} farmName={farmName} answeredCount={overallAnswered} online={online} />
           )}
-
         </div>
 
         <Avatar name="Linh Pham" size={28} />
