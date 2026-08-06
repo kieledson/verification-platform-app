@@ -76,16 +76,16 @@ export function MultiSelectControl({
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
             {summary}
           </span>
-          <Icon name={open ? 'chevron-up' : 'chevron-down'} size={16} style={{ flex: 'none', color: 'var(--text-muted)' }} />
+          <Icon name={open ? 'chevron-down' : 'chevron-up'} size={16} style={{ flex: 'none', color: 'var(--text-muted)' }} />
         </button>
 
         {open && (
           <div
             style={{
               position: 'absolute',
-              top: '100%',
+              bottom: '100%',
               right: 0,
-              marginTop: 6,
+              marginBottom: 6,
               width: 340,
               maxHeight: 260,
               overflowY: 'auto',
@@ -112,12 +112,12 @@ export function MultiSelectControl({
                     padding: '9px 10px',
                     border: 'none',
                     borderRadius: 8,
-                    background: selected ? 'var(--color-primary-subtle)' : 'transparent',
+                    background: selected ? 'var(--ocean-light)' : 'transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: 13.5,
                     fontWeight: selected ? 700 : 500,
-                    color: 'var(--text-body)',
+                    color: selected ? 'var(--ocean-deep)' : 'var(--text-body)',
                   }}
                 >
                   <span
@@ -127,7 +127,7 @@ export function MultiSelectControl({
                       height: 18,
                       borderRadius: 5,
                       border: selected ? 'none' : '1.5px solid var(--border-strong)',
-                      background: selected ? 'var(--ocean)' : '#fff',
+                      background: selected ? 'var(--ocean-deep)' : '#fff',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
