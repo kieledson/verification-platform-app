@@ -74,7 +74,7 @@ export function RolePermissionsPage() {
             {PERMISSION_MATRIX.length} claims across {PERMISSION_GROUPS.length} groups. Each claim's grant is a scope, not a boolean.
           </div>
         </div>
-        <SearchBox value={query} onChange={setQuery} placeholder="Search claims" width={280} />
+        <SearchBox value={query} onChange={setQuery} placeholder="Search claims" />
       </div>
 
       {grouped.map(([group, perms]) => (
@@ -82,7 +82,7 @@ export function RolePermissionsPage() {
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ocean)', marginBottom: 8 }}>
             {group} <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>({perms.length})</span>
           </div>
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', boxShadow: '0 1px 2px rgba(1,44,76,0.05)' }}>
             {perms.map((perm, i) => {
               const scope = scopeByCode[perm.claimCode] ?? perm.admin
               return (

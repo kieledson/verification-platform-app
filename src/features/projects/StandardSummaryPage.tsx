@@ -26,6 +26,7 @@ export function StandardSummaryPage() {
           borderRadius: 14,
           padding: '20px 22px',
           marginBottom: 20,
+          boxShadow: '0 1px 2px rgba(1,44,76,0.05)',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -51,7 +52,7 @@ export function StandardSummaryPage() {
         </div>
       </div>
 
-      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20 }}>
+      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 20, boxShadow: '0 1px 2px rgba(1,44,76,0.05)' }}>
         {sections.map((s, i) => (
           <div
             key={s.id}
@@ -78,7 +79,7 @@ export function StandardSummaryPage() {
       </div>
 
       {STANDARD.knownIssues.length > 0 && (
-        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 20px' }}>
+        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, padding: '16px 20px', boxShadow: '0 1px 2px rgba(1,44,76,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
             <Icon name="alert-triangle" size={15} style={{ color: 'var(--warning)' }} />
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-strong)' }}>

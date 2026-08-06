@@ -85,7 +85,7 @@ export function AssessmentHistoryPage() {
       {rows.length === 0 ? (
         <EmptyState icon="history" title="No assessments found" />
       ) : (
-        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 12, overflowX: 'auto' }}>
+        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, overflowX: 'auto', boxShadow: '0 1px 2px rgba(1,44,76,0.05)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12.5, minWidth: 980 }}>
             <thead>
               <tr style={{ background: 'var(--gray-100)' }}>

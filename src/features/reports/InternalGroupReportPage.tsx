@@ -81,7 +81,7 @@ export function InternalGroupReportPage() {
       </div>
 
       {groupRows.map(({ group, rows, groupStatus }) => (
-        <div key={group.id} style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', marginBottom: 14 }}>
+        <div key={group.id} style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', marginBottom: 14, boxShadow: '0 1px 2px rgba(1,44,76,0.05)' }}>
           <div
             style={{
               display: 'flex',
@@ -133,11 +133,11 @@ export function InternalGroupReportPage() {
 
 const thStyle: React.CSSProperties = {
   textAlign: 'left',
-  padding: '9px 18px',
+  padding: '10px 14px',
   fontSize: 11,
   fontWeight: 800,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: 'var(--text-muted)',
 }
-const tdStyle: React.CSSProperties = { padding: '9px 18px' }
+const tdStyle: React.CSSProperties = { padding: '9px 14px' }
