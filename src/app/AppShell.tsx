@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { TopBar } from '@/app/TopBar'
 import { PinLockScreen } from '@/features/pin-lock/PinLockScreen'
+import { LaunchScreen } from '@/features/launch/LaunchScreen'
 import { usePinLockStore } from '@/state/pinLockStore'
 import { usePinLockTimer } from '@/features/pin-lock/usePinLockTimer'
 import { seedIfEmpty } from '@/db/seed'
@@ -11,6 +12,10 @@ export function AppShell() {
   const isLocked = usePinLockStore((s) => s.isLocked)
   const refresh = usePinLockStore((s) => s.refresh)
   const [ready, setReady] = useState(false)
+  // Shown once per cold start (AppShell only mounts on a fresh page load,
+  // never on client-side route navigation) over whatever's underneath —
+  // the assessment list or the PIN screen, whichever `isLocked` calls for.
+  const [showLaunch, setShowLaunch] = useState(true)
   usePinLockTimer()
   const location = useLocation()
   // The workspace and review screens render their own dark chrome
@@ -70,6 +75,7 @@ export function AppShell() {
           {ready ? <Outlet /> : null}
         </div>
         {isLocked && <PinLockScreen onUnlocked={() => void refresh()} />}
+        {showLaunch && <LaunchScreen onDone={() => setShowLaunch(false)} />}
       </div>
     </div>
   )
