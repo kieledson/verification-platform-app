@@ -46,6 +46,14 @@ function toCodeVisibility(visibility: ReadonlyMap<number, boolean>): Record<stri
   return out
 }
 
+/** Standalone visibility computation for an arbitrary answer set, without
+ * touching `activeAssessmentId` or any other store state — used to snapshot
+ * a *different* assessment's progress (e.g. from the list view) while a
+ * different one may already be open in the workspace. */
+export function computeVisibilityForAnswers(answers: AnswerMap): Record<string, boolean> {
+  return toCodeVisibility(computeAllVisibility(toEngineAnswers(answers)))
+}
+
 interface CoordState {
   x: number
   y: number

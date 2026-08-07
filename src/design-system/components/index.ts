@@ -33,3 +33,6 @@ export type { CheckboxProps } from './Checkbox';
 
 export { default as Radio } from './Radio';
 export type { RadioProps } from './Radio';
+
+export { default as DataTable } from './DataTable';
+export type { DataTableColumn, DataTableFilter } from './DataTable';

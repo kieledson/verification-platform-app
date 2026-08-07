@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
-import { Badge, Button, Icon } from '@/design-system/components'
+import { useEffect, useMemo, useState } from 'react'
+import { Badge, Button, Icon, DataTable, type DataTableColumn } from '@/design-system/components'
 import { useSecurityStore } from '@/state/securityStore'
-import { PageHeader, SectionTabs, RecordCard, EmptyState } from '@/features/portal/portalUi'
+import { PageHeader, SectionTabs, EmptyState } from '@/features/portal/portalUi'
+import type { InvitationRecord } from '@/db/schema'
 
 const STATUS_ACCENT: Record<string, string> = {
   Pending: 'var(--ocean-light)',
@@ -25,6 +26,77 @@ export function InvitationsListPage() {
     if (!loaded) void loadAll()
   }, [loaded, loadAll])
 
+  const columns: DataTableColumn<InvitationRecord>[] = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Name',
+        width: '1.6fr',
+        sortValue: (inv) => inv.displayName,
+        filter: { type: 'text', placeholder: 'Filter name…' },
+        filterValue: (inv) => inv.displayName,
+        render: (inv) => <span style={{ fontWeight: 700, fontSize: 14 }}>{inv.displayName}</span>,
+      },
+      {
+        key: 'email',
+        header: 'Email',
+        width: '1.7fr',
+        sortValue: (inv) => inv.email,
+        filter: { type: 'text', placeholder: 'Filter email…' },
+        filterValue: (inv) => inv.email,
+        render: (inv) => <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{inv.email}</span>,
+      },
+      {
+        key: 'invitedBy',
+        header: 'Invited by',
+        width: '1.3fr',
+        sortValue: (inv) => inv.invitedBy,
+        filter: { type: 'select' },
+        filterValue: (inv) => inv.invitedBy,
+        render: (inv) => <span style={{ fontSize: 13 }}>{inv.invitedBy}</span>,
+      },
+      {
+        key: 'date',
+        header: 'Date',
+        width: '130px',
+        sortValue: (inv) => inv.date,
+        render: (inv) => (
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{new Date(inv.date).toLocaleDateString()}</span>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        width: '110px',
+        sortValue: (inv) => inv.status,
+        filter: { type: 'select' },
+        filterValue: (inv) => inv.status,
+        render: (inv) => <Badge tone={STATUS_TONE[inv.status]}>{inv.status}</Badge>,
+      },
+      {
+        key: 'actions',
+        header: '',
+        width: '110px',
+        align: 'right',
+        render: (inv) => (
+          <Button
+            variant="ghost"
+            size="sm"
+            iconLeft={<Icon name="rotate-cw" size={13} />}
+            onClick={(e) => {
+              e.stopPropagation()
+              void resendInvitation(inv.id)
+              setResent(inv.id)
+            }}
+          >
+            {resent === inv.id ? 'Resent' : 'Resend'}
+          </Button>
+        ),
+      },
+    ],
+    [resent, resendInvitation],
+  )
+
   return (
     <div style={{ padding: '22px 26px 30px' }}>
       <PageHeader title="Invitations" subtitle={`${invitations.length} invitation${invitations.length === 1 ? '' : 's'}`} />
@@ -36,32 +108,13 @@ export function InvitationsListPage() {
         ]}
       />
 
-      {invitations.length === 0 ? (
-        <EmptyState icon="mail" title="No invitations" />
-      ) : (
-        invitations.map((inv) => (
-          <RecordCard key={inv.id} accentColor={STATUS_ACCENT[inv.status]}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>{inv.displayName}</div>
-              <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>
-                {inv.email} · invited by {inv.invitedBy} · {new Date(inv.date).toLocaleDateString()}
-              </div>
-            </div>
-            <Badge tone={STATUS_TONE[inv.status]}>{inv.status}</Badge>
-            <Button
-              variant="ghost"
-              size="sm"
-              iconLeft={<Icon name="rotate-cw" size={13} />}
-              onClick={() => {
-                void resendInvitation(inv.id)
-                setResent(inv.id)
-              }}
-            >
-              {resent === inv.id ? 'Resent' : 'Resend'}
-            </Button>
-          </RecordCard>
-        ))
-      )}
+      <DataTable
+        columns={columns}
+        rows={invitations}
+        getRowId={(inv) => inv.id}
+        accentColor={(inv) => STATUS_ACCENT[inv.status]}
+        emptyState={<EmptyState icon="mail" title="No invitations" />}
+      />
     </div>
   )
 }

@@ -106,9 +106,9 @@ export function GroupGoalBadge({ goal }: { goal: GroupGoal }) {
   return <Badge tone={goal === 'Green' ? 'success' : 'warning'}>{goal}</Badge>
 }
 
-/** Shared "row as card" recipe from `AssessmentRow.tsx` — a white card with
- * a colored left accent, used across the Portal's list screens instead of
- * a dense Kendo-style grid for anything that reads better as records. */
+/** Shared "row as card" recipe — a white card with a colored left accent,
+ * used across the Portal's list screens for anything that reads better as
+ * records than as `DataTable` rows (e.g. Roles, Projects). */
 export function RecordCard({
   accentColor,
   onClick,
