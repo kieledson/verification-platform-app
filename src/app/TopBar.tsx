@@ -26,6 +26,7 @@ export function TopBar() {
   return (
     <header
       style={{
+        position: 'relative',
         height: 56,
         display: 'flex',
         alignItems: 'center',
@@ -36,40 +37,58 @@ export function TopBar() {
         borderBottom: '1px solid var(--border)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 22, minWidth: 0, flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
-          <Logo variant="mark-color" height={30} />
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap' }}>
-            Verification Platform
-          </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
+        <Logo variant="mark-color" height={30} />
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600, whiteSpace: 'nowrap' }}>
+          Verification Platform
         </div>
-
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 2, height: '100%' }}>
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === '/assessments'}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: 7,
-                height: '100%',
-                padding: '0 12px',
-                fontSize: 13,
-                fontWeight: isActive ? 700 : 600,
-                color: isActive ? 'var(--ocean)' : 'var(--text-muted)',
-                borderBottom: isActive ? '2px solid var(--ocean)' : '2px solid transparent',
-                textDecoration: 'none',
-                whiteSpace: 'nowrap',
-              })}
-            >
-              <Icon name={item.icon} size={14} />
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
       </div>
+
+      {/* Absolutely centered so the tab row sits in the middle of the header
+       * regardless of how wide the logo/lockup or the right-side actions are. */}
+      <nav
+        style={{
+          position: 'absolute',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'flex-end',
+          gap: 3,
+        }}
+      >
+        {NAV_ITEMS.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/assessments'}
+            style={({ isActive }) => ({
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              height: isActive ? 38 : 32,
+              // The active tab's own background overlaps the header's 1px
+              // bottom border by 1px, painting over the seam so it reads as
+              // fused with the content pane underneath (classic folder-tab
+              // look); inactive tabs stay flush so that border still shows.
+              marginBottom: isActive ? -1 : 0,
+              padding: '0 14px',
+              fontSize: 13,
+              fontWeight: isActive ? 700 : 600,
+              color: isActive ? 'var(--ocean)' : 'var(--text-muted)',
+              background: isActive ? 'var(--surface-warm)' : 'var(--gray-100)',
+              border: '1px solid var(--border)',
+              borderBottom: isActive ? '1px solid var(--surface-warm)' : 'none',
+              borderRadius: '8px 8px 0 0',
+              textDecoration: 'none',
+              whiteSpace: 'nowrap',
+            })}
+          >
+            <Icon name={item.icon} size={14} />
+            {item.label}
+          </NavLink>
+        ))}
+      </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 'none' }}>
         <ConnectionPill />
