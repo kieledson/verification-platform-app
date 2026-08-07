@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Badge, Button, Icon, DataTable, type DataTableColumn } from '@/design-system/components'
 import { useSecurityStore } from '@/state/securityStore'
-import { PageHeader, SectionTabs, EmptyState } from '@/features/portal/portalUi'
+import { PageHeader, SearchBox, SectionTabs, EmptyState } from '@/features/portal/portalUi'
 import type { InvitationRecord } from '@/db/schema'
 
 const STATUS_ACCENT: Record<string, string> = {
@@ -21,10 +21,19 @@ export function InvitationsListPage() {
   const loadAll = useSecurityStore((s) => s.loadAll)
   const resendInvitation = useSecurityStore((s) => s.resendInvitation)
   const [resent, setResent] = useState<string | null>(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (!loaded) void loadAll()
   }, [loaded, loadAll])
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return invitations
+    return invitations.filter((inv) =>
+      [inv.displayName, inv.email, inv.invitedBy, inv.status].some((f) => f.toLowerCase().includes(q)),
+    )
+  }, [invitations, query])
 
   const columns: DataTableColumn<InvitationRecord>[] = useMemo(
     () => [
@@ -33,8 +42,6 @@ export function InvitationsListPage() {
         header: 'Name',
         width: '1.6fr',
         sortValue: (inv) => inv.displayName,
-        filter: { type: 'text', placeholder: 'Filter name…' },
-        filterValue: (inv) => inv.displayName,
         render: (inv) => <span style={{ fontWeight: 700, fontSize: 14 }}>{inv.displayName}</span>,
       },
       {
@@ -42,8 +49,6 @@ export function InvitationsListPage() {
         header: 'Email',
         width: '1.7fr',
         sortValue: (inv) => inv.email,
-        filter: { type: 'text', placeholder: 'Filter email…' },
-        filterValue: (inv) => inv.email,
         render: (inv) => <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{inv.email}</span>,
       },
       {
@@ -51,8 +56,6 @@ export function InvitationsListPage() {
         header: 'Invited by',
         width: '1.3fr',
         sortValue: (inv) => inv.invitedBy,
-        filter: { type: 'select' },
-        filterValue: (inv) => inv.invitedBy,
         render: (inv) => <span style={{ fontSize: 13 }}>{inv.invitedBy}</span>,
       },
       {
@@ -69,8 +72,6 @@ export function InvitationsListPage() {
         header: 'Status',
         width: '110px',
         sortValue: (inv) => inv.status,
-        filter: { type: 'select' },
-        filterValue: (inv) => inv.status,
         render: (inv) => <Badge tone={STATUS_TONE[inv.status]}>{inv.status}</Badge>,
       },
       {
@@ -99,7 +100,11 @@ export function InvitationsListPage() {
 
   return (
     <div style={{ padding: '22px 26px 30px' }}>
-      <PageHeader title="Invitations" subtitle={`${invitations.length} invitation${invitations.length === 1 ? '' : 's'}`} />
+      <PageHeader
+        title="Invitations"
+        subtitle={`${invitations.length} invitation${invitations.length === 1 ? '' : 's'}`}
+        actions={<SearchBox value={query} onChange={setQuery} placeholder="Search invitations" />}
+      />
       <SectionTabs
         items={[
           { to: '/security/users', label: 'Users' },
@@ -110,10 +115,10 @@ export function InvitationsListPage() {
 
       <DataTable
         columns={columns}
-        rows={invitations}
+        rows={filtered}
         getRowId={(inv) => inv.id}
         accentColor={(inv) => STATUS_ACCENT[inv.status]}
-        emptyState={<EmptyState icon="mail" title="No invitations" />}
+        emptyState={<EmptyState icon="mail" title="No invitations found" subtitle={query ? 'Try a different search.' : undefined} />}
       />
     </div>
   )

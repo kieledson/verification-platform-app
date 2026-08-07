@@ -1,10 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import Icon from './Icon';
-import Select from './Select';
-
-export type DataTableFilter =
-  | { type: 'text'; placeholder?: string }
-  | { type: 'select'; options?: string[]; allLabel?: string };
 
 export interface DataTableColumn<T> {
   key: string;
@@ -15,10 +10,6 @@ export interface DataTableColumn<T> {
   render: (row: T) => ReactNode;
   /** Enables the sort arrow on this column's header. */
   sortValue?: (row: T) => string | number;
-  /** Enables a filter control under this column's header. Requires `filterValue`. */
-  filter?: DataTableFilter;
-  /** Plain-text value used for filter matching (and to derive `select` options when none are given). */
-  filterValue?: (row: T) => string;
 }
 
 interface SortState {
@@ -27,11 +18,13 @@ interface SortState {
 }
 
 /**
- * Generic sortable/filterable list table, styled to match the app's
- * existing card-based rows (grid layout, same border/radius language as
- * `AssessmentRow`/`RecordCard`) rather than a native `<table>`. One column
- * template drives the header, the optional filter row, and every data row,
- * so everything lines up.
+ * Generic sortable list table, styled to match the app's existing
+ * card-based rows (grid layout, same border/radius language as
+ * `RecordCard`) rather than a native `<table>`. Filtering is left to the
+ * caller (a single search box, per the Field App's "Your assessments"
+ * pattern) — this component only owns sort and optional row expansion. One
+ * column template drives both the header and every data row, so everything
+ * lines up.
  */
 export function DataTable<T>({
   columns,
@@ -53,50 +46,20 @@ export function DataTable<T>({
   emptyState?: ReactNode;
 }) {
   const [sort, setSort] = useState<SortState | null>(null);
-  const [filters, setFilters] = useState<Record<string, string>>({});
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
-  const hasFilterRow = columns.some((c) => c.filter);
-
-  const filterOptions = useMemo(() => {
-    const out: Record<string, string[]> = {};
-    for (const col of columns) {
-      if (col.filter?.type === 'select') {
-        out[col.key] =
-          col.filter.options ??
-          Array.from(new Set(rows.map((r) => col.filterValue?.(r) ?? '').filter(Boolean))).sort((a, b) =>
-            a.localeCompare(b),
-          );
-      }
-    }
-    return out;
-  }, [columns, rows]);
-
   const visibleRows = useMemo(() => {
-    let out = rows;
-    out = out.filter((row) =>
-      columns.every((col) => {
-        const active = filters[col.key];
-        if (!active || !col.filter) return true;
-        const value = col.filterValue?.(row) ?? '';
-        if (col.filter.type === 'select') return value === active;
-        return value.toLowerCase().includes(active.toLowerCase());
-      }),
-    );
-    if (sort) {
-      const col = columns.find((c) => c.key === sort.key);
-      if (col?.sortValue) {
-        const dir = sort.direction === 'asc' ? 1 : -1;
-        out = [...out].sort((a, b) => {
-          const av = col.sortValue!(a);
-          const bv = col.sortValue!(b);
-          const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv));
-          return cmp * dir;
-        });
-      }
-    }
-    return out;
-  }, [rows, columns, filters, sort]);
+    if (!sort) return rows;
+    const col = columns.find((c) => c.key === sort.key);
+    if (!col?.sortValue) return rows;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = col.sortValue!(a);
+      const bv = col.sortValue!(b);
+      const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv));
+      return cmp * dir;
+    });
+  }, [rows, columns, sort]);
 
   const gridTemplate = (renderExpanded ? '28px ' : '') + columns.map((c) => c.width).join(' ');
 
@@ -163,50 +126,6 @@ export function DataTable<T>({
           </button>
         ))}
       </div>
-
-      {hasFilterRow && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: gridTemplate,
-            background: '#fff',
-            border: '1px solid var(--border)',
-            borderBottom: '1px solid var(--border)',
-            padding: '6px 0',
-          }}
-        >
-          {renderExpanded && <div />}
-          {columns.map((col) => (
-            <div key={col.key} style={{ padding: '0 8px' }}>
-              {col.filter?.type === 'text' && (
-                <input
-                  value={filters[col.key] ?? ''}
-                  onChange={(e) => setFilters((f) => ({ ...f, [col.key]: e.target.value }))}
-                  placeholder={col.filter.placeholder ?? 'Filter…'}
-                  style={{
-                    width: '100%',
-                    fontSize: 12.5,
-                    padding: '5px 8px',
-                    border: '1px solid var(--border)',
-                    borderRadius: 7,
-                    outline: 'none',
-                  }}
-                />
-              )}
-              {col.filter?.type === 'select' && (
-                <Select
-                  value={filters[col.key] ?? ''}
-                  onChange={(e) => setFilters((f) => ({ ...f, [col.key]: e.target.value }))}
-                  options={[
-                    { value: '', label: col.filter.allLabel ?? 'All' },
-                    ...filterOptions[col.key].map((v) => ({ value: v, label: v })),
-                  ]}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
 
       {visibleRows.length === 0 ? (
         <div style={{ border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 10px 10px' }}>{emptyState}</div>

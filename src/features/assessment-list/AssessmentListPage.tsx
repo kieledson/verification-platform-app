@@ -63,11 +63,6 @@ export function AssessmentListPage() {
         header: 'Farm / site',
         width: '1.9fr',
         sortValue: (r) => siteById.get(r.farmSiteId)?.farmName ?? r.farmSiteId,
-        filter: { type: 'text', placeholder: 'Filter farm…' },
-        filterValue: (r) => {
-          const site = siteById.get(r.farmSiteId)
-          return `${site?.farmName ?? r.farmSiteId} ${site?.referenceCode ?? ''}`
-        },
         render: (r) => {
           const site = siteById.get(r.farmSiteId)
           return (
@@ -96,8 +91,6 @@ export function AssessmentListPage() {
         header: 'Region',
         width: '140px',
         sortValue: (r) => siteById.get(r.farmSiteId)?.region ?? '',
-        filter: { type: 'select' },
-        filterValue: (r) => siteById.get(r.farmSiteId)?.region ?? '',
         render: (r) => <span style={{ fontSize: 13 }}>{siteById.get(r.farmSiteId)?.region ?? '—'}</span>,
       },
       {
@@ -105,8 +98,6 @@ export function AssessmentListPage() {
         header: 'Group',
         width: '150px',
         sortValue: (r) => siteById.get(r.farmSiteId)?.groupName ?? r.groupId,
-        filter: { type: 'select' },
-        filterValue: (r) => siteById.get(r.farmSiteId)?.groupName ?? r.groupId,
         render: (r) => <span style={{ fontSize: 13 }}>{siteById.get(r.farmSiteId)?.groupName ?? r.groupId}</span>,
       },
       {
@@ -114,8 +105,6 @@ export function AssessmentListPage() {
         header: 'Assessor type',
         width: '130px',
         sortValue: (r) => r.assessorType,
-        filter: { type: 'select' },
-        filterValue: (r) => r.assessorType,
         render: (r) => <span style={{ fontSize: 13 }}>{r.assessorType}</span>,
       },
       {
@@ -159,8 +148,6 @@ export function AssessmentListPage() {
         header: 'Status',
         width: '170px',
         sortValue: (r) => disposition(r, online).label,
-        filter: { type: 'select' },
-        filterValue: (r) => disposition(r, online).label,
         render: (r) => {
           const sync = disposition(r, online)
           return (
@@ -182,7 +169,17 @@ export function AssessmentListPage() {
   const filtered = fieldAssessments.filter((a) => {
     if (!query.trim()) return true
     const site = siteById.get(a.farmSiteId)
-    const haystack = `${site?.farmName ?? ''} ${site?.referenceCode ?? ''} ${site?.groupName ?? ''}`.toLowerCase()
+    const haystack = [
+      site?.farmName,
+      site?.referenceCode,
+      site?.groupName ?? a.groupId,
+      site?.region,
+      a.assessorType,
+      disposition(a, online).label,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
     return haystack.includes(query.trim().toLowerCase())
   })
 

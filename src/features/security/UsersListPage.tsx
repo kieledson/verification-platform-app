@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Icon, Avatar, DataTable, type DataTableColumn } from '@/design-system/components'
 import { useSecurityStore } from '@/state/securityStore'
-import { PageHeader, SectionTabs, EmptyState } from '@/features/portal/portalUi'
+import { PageHeader, SearchBox, SectionTabs, EmptyState } from '@/features/portal/portalUi'
 import type { UserRecord } from '@/db/schema'
 
 const STATUS_ACCENT: Record<string, string> = {
@@ -16,6 +16,7 @@ export function UsersListPage() {
   const roles = useSecurityStore((s) => s.roles)
   const loaded = useSecurityStore((s) => s.loaded)
   const loadAll = useSecurityStore((s) => s.loadAll)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     if (!loaded) void loadAll()
@@ -24,6 +25,17 @@ export function UsersListPage() {
   const roleName = (id: string) => roles.find((r) => r.id === id)?.name ?? id
   const roleNames = (u: UserRecord) => u.roleIds.map(roleName)
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return users
+    return users.filter((u) =>
+      [u.displayName, u.email, u.organisationName, u.country, u.status, ...roleNames(u)].some((f) =>
+        f.toLowerCase().includes(q),
+      ),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roleNames reads `roles`, which is already a dep
+  }, [users, query, roles])
+
   const columns: DataTableColumn<UserRecord>[] = useMemo(
     () => [
       {
@@ -31,8 +43,6 @@ export function UsersListPage() {
         header: 'Name',
         width: '2fr',
         sortValue: (u) => u.displayName,
-        filter: { type: 'text', placeholder: 'Filter name…' },
-        filterValue: (u) => u.displayName,
         render: (u) => (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
             <Avatar name={u.displayName} size={32} />
@@ -47,8 +57,6 @@ export function UsersListPage() {
         header: 'Email',
         width: '1.7fr',
         sortValue: (u) => u.email,
-        filter: { type: 'text', placeholder: 'Filter email…' },
-        filterValue: (u) => u.email,
         render: (u) => <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{u.email}</span>,
       },
       {
@@ -56,8 +64,6 @@ export function UsersListPage() {
         header: 'Organisation',
         width: '1.4fr',
         sortValue: (u) => u.organisationName,
-        filter: { type: 'text', placeholder: 'Filter org…' },
-        filterValue: (u) => u.organisationName,
         render: (u) => <span style={{ fontSize: 13 }}>{u.organisationName}</span>,
       },
       {
@@ -65,8 +71,6 @@ export function UsersListPage() {
         header: 'Location',
         width: '130px',
         sortValue: (u) => u.country,
-        filter: { type: 'select' },
-        filterValue: (u) => u.country,
         render: (u) => <span style={{ fontSize: 13 }}>{u.country}</span>,
       },
       {
@@ -74,8 +78,6 @@ export function UsersListPage() {
         header: 'Role',
         width: '1.2fr',
         sortValue: (u) => roleNames(u)[0] ?? '',
-        filter: { type: 'select' },
-        filterValue: (u) => roleNames(u)[0] ?? '',
         render: (u) => (
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {u.roleIds.map((id) => (
@@ -92,12 +94,10 @@ export function UsersListPage() {
         width: '120px',
         align: 'right',
         sortValue: (u) => u.status,
-        filter: { type: 'select' },
-        filterValue: (u) => u.status,
         render: (u) => <Badge tone={u.status === 'Active' ? 'success' : 'neutral'}>{u.status}</Badge>,
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- roleName reads `roles`, which is already a dep
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- roleName/roleNames read `roles`, which is already a dep
     [roles],
   )
 
@@ -107,9 +107,12 @@ export function UsersListPage() {
         title="Users"
         subtitle={`${users.length} user${users.length === 1 ? '' : 's'} across every project`}
         actions={
-          <Button variant="primary" iconLeft={<Icon name="user-plus" size={15} />} onClick={() => navigate('/security/users/new')}>
-            Invite new user
-          </Button>
+          <>
+            <SearchBox value={query} onChange={setQuery} placeholder="Search users" />
+            <Button variant="primary" iconLeft={<Icon name="user-plus" size={15} />} onClick={() => navigate('/security/users/new')}>
+              Invite new user
+            </Button>
+          </>
         }
       />
       <SectionTabs
@@ -122,11 +125,11 @@ export function UsersListPage() {
 
       <DataTable
         columns={columns}
-        rows={users}
+        rows={filtered}
         getRowId={(u) => u.id}
         accentColor={(u) => STATUS_ACCENT[u.status]}
         onRowClick={(u) => navigate(`/security/users/${u.id}`)}
-        emptyState={<EmptyState icon="users" title="No users found" subtitle="Try a different filter." />}
+        emptyState={<EmptyState icon="users" title="No users found" subtitle={query ? 'Try a different search.' : 'No users yet.'} />}
       />
     </div>
   )
