@@ -294,6 +294,8 @@ export function StandardEditorPage() {
   const [newSectionName, setNewSectionName] = useState('')
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [draggedQuestionId, setDraggedQuestionId] = useState<number | null>(null)
+  const [dragOverQuestionId, setDragOverQuestionId] = useState<number | null>(null)
 
   useEffect(() => {
     if (!existing) return
@@ -363,6 +365,26 @@ export function StandardEditorPage() {
       setSections((secs) => secs.map((s) => (s.id === activeSection.id ? { ...s, questionIds: [...s.questionIds, q.id] } : s)))
     }
     setEditingQuestion(null)
+    markDirty()
+  }
+
+  /** Reorders within `section.questionIds` only — that array (not
+   * `question.sortOrder`) is what the Field App actually iterates
+   * (see `flatQuestions.ts`), so it's the only thing that needs to move. */
+  function reorderQuestion(sectionId: number, draggedId: number, targetId: number) {
+    if (draggedId === targetId) return
+    setSections((secs) =>
+      secs.map((s) => {
+        if (s.id !== sectionId) return s
+        const ids = [...s.questionIds]
+        const from = ids.indexOf(draggedId)
+        const to = ids.indexOf(targetId)
+        if (from === -1 || to === -1) return s
+        ids.splice(from, 1)
+        ids.splice(to, 0, draggedId)
+        return { ...s, questionIds: ids }
+      }),
+    )
     markDirty()
   }
 
@@ -545,19 +567,52 @@ export function StandardEditorPage() {
             activeSection.questionIds.map((qid, i) => {
               const q = questionsById.get(qid)
               if (!q) return null
+              const isDragging = draggedQuestionId === qid
+              const isDragOver = dragOverQuestionId === qid && draggedQuestionId !== qid
               return (
                 <div
                   key={qid}
                   onClick={() => setEditingQuestion(q)}
+                  draggable={!readOnly}
+                  onDragStart={(e) => {
+                    setDraggedQuestionId(qid)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  onDragOver={(e) => {
+                    if (readOnly || draggedQuestionId == null) return
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                    setDragOverQuestionId(qid)
+                  }}
+                  onDragLeave={() => setDragOverQuestionId((cur) => (cur === qid ? null : cur))}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (draggedQuestionId != null && activeSection) reorderQuestion(activeSection.id, draggedQuestionId, qid)
+                    setDraggedQuestionId(null)
+                    setDragOverQuestionId(null)
+                  }}
+                  onDragEnd={() => {
+                    setDraggedQuestionId(null)
+                    setDragOverQuestionId(null)
+                  }}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
                     padding: '11px 16px',
-                    borderTop: i === 0 ? 'none' : '1px solid var(--gray-100)',
+                    borderTop: isDragOver ? '2px solid var(--ocean)' : i === 0 ? 'none' : '1px solid var(--gray-100)',
                     cursor: 'pointer',
+                    opacity: isDragging ? 0.4 : 1,
+                    background: isDragOver ? 'var(--color-primary-subtle)' : undefined,
                   }}
                 >
+                  {!readOnly && (
+                    <Icon
+                      name="grip-vertical"
+                      size={14}
+                      style={{ color: 'var(--text-muted)', flex: 'none', cursor: 'grab' }}
+                    />
+                  )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 600 }}>{localize(q.text)}</div>
                     <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{q.code}</div>
