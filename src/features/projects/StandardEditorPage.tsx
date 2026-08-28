@@ -197,7 +197,7 @@ function QuestionEditorModal({
   return (
     <div
       onClick={onCancel}
-      style={{ position: 'absolute', inset: 0, background: 'rgba(1,44,76,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 900 }}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(1,44,76,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 900 }}
     >
       <div
         onClick={(e) => e.stopPropagation()}
