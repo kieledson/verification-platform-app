@@ -117,7 +117,7 @@ export function StandardsListPage() {
       {
         key: 'actions',
         header: '',
-        width: '90px',
+        width: '120px',
         align: 'right',
         render: (s) => (
           <Button
