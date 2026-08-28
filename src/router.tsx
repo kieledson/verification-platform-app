@@ -15,7 +15,8 @@ import { ProjectsListPage } from '@/features/projects/ProjectsListPage'
 import { ProjectEditorPage } from '@/features/projects/ProjectEditorPage'
 import { GroupEditorPage } from '@/features/projects/GroupEditorPage'
 import { SiteEditorPage } from '@/features/projects/SiteEditorPage'
-import { StandardSummaryPage } from '@/features/projects/StandardSummaryPage'
+import { StandardsListPage } from '@/features/projects/StandardsListPage'
+import { StandardEditorPage } from '@/features/projects/StandardEditorPage'
 import { AssessmentHistoryPage } from '@/features/reports/AssessmentHistoryPage'
 import { InternalGroupReportPage } from '@/features/reports/InternalGroupReportPage'
 
@@ -47,7 +48,8 @@ export const router = createHashRouter([
       { path: '/projects/:projectId', element: <ProjectEditorPage /> },
       { path: '/projects/:projectId/groups/:groupId', element: <GroupEditorPage /> },
       { path: '/projects/:projectId/groups/:groupId/sites/:siteId', element: <SiteEditorPage /> },
-      { path: '/standard', element: <StandardSummaryPage /> },
+      { path: '/standard', element: <StandardsListPage /> },
+      { path: '/standard/:standardId', element: <StandardEditorPage /> },
 
       // Reports
       { path: '/reports', element: <Navigate to="/reports/assessment-history" replace /> },

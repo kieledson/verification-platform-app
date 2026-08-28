@@ -11,6 +11,7 @@ import { seedProjectsAndGroupsIfEmpty } from '@/db/seedProjectsAndGroups'
 import { seedReportAssessmentsIfEmpty } from '@/db/seedReportAssessments'
 import { seedSecurityIfEmpty } from '@/db/seedSecurity'
 import { seedExportTemplatesIfEmpty } from '@/db/seedExportTemplates'
+import { seedStandardLibraryIfEmpty } from '@/db/seedStandardLibrary'
 
 export function AppShell() {
   const isLocked = usePinLockStore((s) => s.isLocked)
@@ -42,6 +43,7 @@ export function AppShell() {
       await seedReportAssessmentsIfEmpty()
       await seedSecurityIfEmpty()
       await seedExportTemplatesIfEmpty()
+      await seedStandardLibraryIfEmpty()
       await refresh()
       setReady(true)
     }

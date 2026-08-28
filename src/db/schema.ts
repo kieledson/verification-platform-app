@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import type { Section, Question, KnownIssue } from '@/standard/schema/types'
 
 export type AssessmentStatus = 'draft' | 'ready-to-sync' | 'pending-upload' | 'synced'
 
@@ -237,6 +238,41 @@ export interface ExportTemplateRecord {
   updatedAt: number
 }
 
+/** Draft standards are freely editable; Published ones are treated as
+ * immutable (Document 2 §19's own recommendation) — changing a Published
+ * standard means cloning it into a new Draft first. Archived is for
+ * retiring an old Published standard without deleting its history. */
+export type StandardRecordStatus = 'Draft' | 'Published' | 'Archived'
+
+/** A full, self-contained standard document — the same shape the static
+ * v2.4 ingestion produces (`Standard` in `standard/schema/types.ts`), just
+ * persisted and editable instead of baked into a checked-in JSON file. The
+ * dependency-engine test suite and the Field App's dependency-engine calls
+ * are unaffected: they keep working against the original static
+ * `standard.v2_4.json` import. This table is the authoring surface only —
+ * see the Standards feature's scope note about not (yet) rewiring "new
+ * assessment" to pick whichever record here is active. */
+export interface StandardRecord {
+  id: string
+  name: string
+  version: string
+  status: StandardRecordStatus
+  /** At most one record is active at a time — the one the Standards list
+   * highlights as "the" standard, mirroring the real system's
+   * one-published-version-in-use model. Not currently read by the Field
+   * App (see scope note above). */
+  isActive: boolean
+  /** The record this was cloned from, for provenance — `null` for a
+   * standard built from scratch. */
+  clonedFromId: string | null
+  sections: Section[]
+  questions: Question[]
+  codeAliases: Record<string, number>
+  knownIssues: KnownIssue[]
+  createdAt: number
+  updatedAt: number
+}
+
 export class AppDB extends Dexie {
   assessments!: EntityTable<AssessmentRecord, 'id'>
   answers!: EntityTable<AnswerRecord, 'assessmentId'>
@@ -253,6 +289,7 @@ export class AppDB extends Dexie {
   projects!: EntityTable<ProjectRecord, 'id'>
   siteGroups!: EntityTable<SiteGroupRecord, 'id'>
   exportTemplates!: EntityTable<ExportTemplateRecord, 'id'>
+  standards!: EntityTable<StandardRecord, 'id'>
 
   constructor(name = 'vp-field-app') {
     super(name)
@@ -274,6 +311,11 @@ export class AppDB extends Dexie {
       projects: 'id, parentProjectId',
       siteGroups: 'id, projectId',
       exportTemplates: 'id, archived',
+      // `isActive` is a boolean field — IndexedDB can't index boolean
+      // values (a non-primary index entry is simply skipped for keys that
+      // aren't valid IndexedDB keys), so it's deliberately not listed here;
+      // reads filter it in JS instead (see `publishStandard`).
+      standards: 'id, status',
     })
   }
 }
